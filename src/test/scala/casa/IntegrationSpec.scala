@@ -3,14 +3,15 @@ package casa
 import casa.compiler.{Command, Query}
 import cats.data.Chain.Singleton
 import cats.effect.unsafe.IORuntime
+import com.datastax.oss.driver.api.core.cql.BatchType
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, ZoneOffset}
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
+class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   implicit val ioRuntime: IORuntime = IORuntime.global
 
@@ -18,8 +19,8 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
     "events",
     (
       "id" :=: uuid,
-      "artists" :=: list[varchar],
       "start_time" :=: timestamp,
+      "artists" :=: list[varchar],
       "venue" :=: nullable[text],
       "prices" :=: map[varchar, decimal],
       "tags" :=: set[varchar]
@@ -38,36 +39,21 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
   val insert: Command[Event] =
     Insert
       .into(events)
-      .fields(g => (
-        g("id"),
-        g("start_time"),
-        g("artists"),
-        g("venue"),
-        g("prices"),
-        g("tags")
-      ))
       .compile
       .pcontramap[Event]
 
   val select: Query[Unit, Event] =
     Select
       .from(events)
-      .take(g => (
-        g("id"),
-        g("start_time"),
-        g("artists"),
-        g("venue"),
-        g("prices"),
-        g("tags")
-      ))
+      .take(_.*)
       .compile
       .pmap[Event]
 
   "Can insert / retrieve data" in {
 
-    val event = Event(
+    val event1 = Event(
       UUID.randomUUID(),
-      Instant.now().truncatedTo(ChronoUnit.MILLIS),
+      LocalDate.now.atStartOfDay.toInstant(ZoneOffset.UTC),
       List("Radiohead", "Sigur Ros"),
       Some("Roundhouse"),
       Map(
@@ -77,12 +63,17 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
       Set("rock", "post rock", "indie")
     )
 
+    val event2 = event1.copy(
+      id = UUID.randomUUID(),
+      startTime = LocalDate.now.plusDays(1).atStartOfDay.toInstant(ZoneOffset.UTC)
+    )
+
     cassandraRuntime.use(cassandra =>
       for {
         _ <- cassandra.execute("TRUNCATE events", List.empty)
-        _ <- cassandra.execute(insert)(event)
+        _ <- cassandra.executeBatch(insert, BatchType.LOGGED)(List(event1, event2))
         result <- cassandra.execute(select)(()).compile.toList
       } yield result
-    ).unsafeRunSync() shouldBe List(event)
+    ).unsafeRunSync() shouldBe List(event1, event2)
 
   }

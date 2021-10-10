@@ -23,4 +23,4 @@ object Insert:
   def into[TableName, TableColumns, KeyValues](table: Table[TableName, TableColumns])(
     using
     assignments: Assignments[TableColumns, KeyValues]
-  ): Insert[TableName, TableColumns, KeyValues] = Insert(table, assignments(table.columns))
+  ): Insert[TableName, TableColumns, KeyValues] = Insert(table, assignments(table.*))

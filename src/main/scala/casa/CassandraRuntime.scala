@@ -5,7 +5,7 @@ import cats.arrow.FunctionK
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.cql.{AsyncResultSet, ResultSet, SimpleStatement, SimpleStatementBuilder, Statement, StatementBuilder}
+import com.datastax.oss.driver.api.core.cql.*
 import com.datastax.oss.driver.api.core.session.Session
 
 import java.net.InetSocketAddress
@@ -28,8 +28,6 @@ class CassandraRuntime(protected val session: CqlSession):
 
   def execute(cql: String, params: List[Any]): IO[AsyncResultSet] = {
     val statement = buildStatement(new SimpleStatementBuilder(cql), params).build()
-    println(statement.getQuery)
-    println(statement.getPositionalValues)
     IO.fromFuture(IO(session.executeAsync(statement).asScala))
   }
 
@@ -43,6 +41,15 @@ class CassandraRuntime(protected val session: CqlSession):
   def execute[Input](command: Command[Input]): Input => IO[Unit] =
     (input: Input) =>
       execute(command.cql, command.encoder.encode(input)).void
+
+  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => IO[Unit] =
+    (rows: Iterable[Input]) =>
+      val batch = rows
+        .map(placeholders => buildStatement(new SimpleStatementBuilder(command.cql), command.encoder.encode(placeholders)).build())
+        .foldLeft(new BatchStatementBuilder(batchType)) { case (batch, statement) => batch.addStatement(statement) }
+        .build()
+
+      IO.fromFuture(IO(session.executeAsync(batch).asScala)).void
 
 
 object CassandraRuntime:
