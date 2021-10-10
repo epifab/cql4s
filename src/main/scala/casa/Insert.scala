@@ -1,6 +1,6 @@
 package casa
 
-import casa.compiler.{Command, CommandCompiler}
+import casa.compiler.{CommandCompiler}
 import casa.utils.NonEmptyListOfFields
 
 

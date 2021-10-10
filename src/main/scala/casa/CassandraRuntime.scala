@@ -1,7 +1,5 @@
 package casa
 
-import casa.compiler.{Command, Query}
-import cats.arrow.FunctionK
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.datastax.oss.driver.api.core.CqlSession

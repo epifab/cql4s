@@ -1,6 +1,6 @@
 package casa
 
-import casa.compiler.{Query, QueryCompiler}
+import casa.compiler.QueryCompiler
 import casa.utils.{FindAll, NonEmptyListOfFields}
 
 

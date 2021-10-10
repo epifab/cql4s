@@ -1,14 +1,13 @@
 package casa
 
-import casa.compiler.{Command, Query}
 import cats.data.Chain.Singleton
+import cats.effect.IOApp
 import cats.effect.unsafe.IORuntime
 import com.datastax.oss.driver.api.core.cql.BatchType
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 import java.time.{Instant, LocalDate, ZoneOffset}
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:

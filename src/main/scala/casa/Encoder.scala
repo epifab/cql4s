@@ -1,5 +1,4 @@
 package casa
-package compiler
 
 import com.datastax.oss.driver.api.core.cql.Row
 
