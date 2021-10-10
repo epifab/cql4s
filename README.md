@@ -1,6 +1,6 @@
 # CQL4s
 
-[![Build Status](https://travis-ci.com/epifab/cql4s.svg?branch=main)](https://travis-ci.com/epifab/cql4s)
+[![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://travis-ci.com/epifab/cql4s)
 
 CQL4s is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
 built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
