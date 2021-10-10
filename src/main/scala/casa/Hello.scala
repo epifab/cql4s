@@ -17,9 +17,6 @@ import scala.jdk.FutureConverters.*
 import scala.util.Random
 import scala.util.chaining.*
 
-case class CassandraCredentials(username: String, password: String)
-case class CassandraConfig(host: String, port: Int, credentials: Option[CassandraCredentials], keyspace: String, datacenter: String)
-
 object Hello extends IOApp :
 
   override def run(args: List[String]): IO[ExitCode] = {

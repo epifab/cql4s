@@ -65,7 +65,10 @@ type set[T]
 
 
 object DbType:
-  type Aux[T, U] = DbType[T] { type Out = U }
+  type Aux[T, JT, ST] = DbType[T] {
+    type JavaType = JT
+    type ScalaType = ST 
+  }
 
   given DbType[ascii] with SimpleDbType[ascii, String] with
     override val codec: TypeCodec[String] = TypeCodecs.ASCII
