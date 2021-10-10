@@ -10,4 +10,5 @@ object FieldFragment:
       CompiledFragment(field.name.escaped)
       
   given placeholder[P <: Placeholder[_, _]]: FieldFragment[P, P *: EmptyTuple] with
-    def build(placeholder: P): CompiledFragment[P *: EmptyTuple] = CompiledFragment(List("?"), placeholder *: EmptyTuple)
+    def build(placeholder: P): CompiledFragment[P *: EmptyTuple] = 
+      CompiledFragment(List("?"), placeholder *: EmptyTuple)

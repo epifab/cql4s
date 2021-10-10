@@ -1,5 +1,6 @@
 package casa
 
+import casa.compiler.{Command, Query}
 import cats.data.Chain.Singleton
 import cats.effect.unsafe.IORuntime
 import org.scalatest.freespec.AnyFreeSpec
@@ -13,22 +14,64 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   implicit val ioRuntime: IORuntime = IORuntime.global
 
-  object gigs extends Table["events", ("artists" :=: list[varchar], "start_time" :=: timestamp, "venue" :=: text)]
+  object events extends Table[
+    "events",
+    (
+      "id" :=: uuid,
+      "artists" :=: list[varchar],
+      "start_time" :=: timestamp,
+      "venue" :=: nullable[text],
+      "prices" :=: map[varchar, decimal],
+      "tags" :=: set[varchar]
+    )
+  ]
 
-  // cassandra stores up to millis
-  val atSomePoint = Instant.now().truncatedTo(ChronoUnit.MILLIS)
+  val insert: Command[(UUID, Instant, List[String], Option[String], Map[String, BigDecimal], Set[String])] =
+    Insert
+      .into(events)
+      .fields(g => (
+        g("id"),
+        g("start_time"),
+        g("artists"),
+        g("venue"),
+        g("prices"),
+        g("tags")
+      ))
+      .compile
 
-  val query =
+  val select: Query[EmptyTuple, (UUID, Instant, List[String], Option[String], Map[String, BigDecimal], Set[String])] =
     Select
-      .from(gigs)
-      .take("artists", "start_time", "venue")
+      .from(events)
+      .take(g => (
+        g("id"),
+        g("start_time"),
+        g("artists"),
+        g("venue"),
+        g("prices"),
+        g("tags")
+      ))
+      .compile
 
-  "Can run a simple select query" in {
+  "Can insert / retrieve data" in {
+
+    val event = (
+      UUID.randomUUID(),
+      Instant.now().truncatedTo(ChronoUnit.MILLIS),
+      List("Radiohead", "Sigur Ros"),
+      Some("Roundhouse"),
+      Map(
+        "USD" -> BigDecimal(20.5),
+        "GBP" -> BigDecimal(16)
+      ),
+      Set("rock", "post rock", "indie")
+    )
+
     cassandraRuntime.use(cassandra =>
       for {
         _ <- cassandra.execute("TRUNCATE events", List.empty)
-        _ <- cassandra.execute("INSERT INTO events (id, artists, venue, start_time) VALUES (?, ?, ?, ?)", List(UUID.randomUUID(), java.util.List.of("Radiohead", "Sigur Ros"), "Roundhouse", atSomePoint))
-        result <- cassandra.execute(query.compile)(EmptyTuple).compile.toList
+        _ <- cassandra.execute(insert)(event)
+        result <- cassandra.execute(select)(Tuple()).compile.toList
       } yield result
-    ).unsafeRunSync() shouldBe List((List("Radiohead", "Sigur Ros"), atSomePoint, "Roundhouse"))
+    ).unsafeRunSync() shouldBe List(event)
+
   }

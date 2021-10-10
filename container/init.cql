@@ -6,9 +6,10 @@ CREATE KEYSPACE IF NOT EXISTS music WITH REPLICATION = {
 
 -- Create a table
 CREATE TABLE IF NOT EXISTS music.events (
-    id uuid,
+    id uuid primary key,
     artists list<varchar>,
+    tags set<varchar>,
+    prices map<varchar, decimal>,
     venue varchar,
-    start_time timestamp,
-    primary key (id, venue)
+    start_time timestamp
 );

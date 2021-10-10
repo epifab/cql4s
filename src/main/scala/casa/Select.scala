@@ -1,13 +1,19 @@
 package casa
 
 import casa.compiler.{Query, QueryCompiler}
-import casa.utils.FindAll
+import casa.utils.{FindAll, NonEmptyListOfFields}
 
 
-class Select[TableName, TableColumns, Columns](val table: Table[TableName, TableColumns], val columns: Columns):
+class Select[TableName, TableColumns, Fields](
+  val table: Table[TableName, TableColumns],
+  val fields: Fields
+):
 
   def compile[Input, Output](using compiler: QueryCompiler[this.type, Input, Output]): Query[Input, Output] =
     compiler.build(this)
+
+  def take[NewFields](f: Selectable[TableColumns] => NewFields)(using NonEmptyListOfFields[NewFields]): Select[TableName, TableColumns, NewFields] =
+    Select(table, f(table))
 
   // todo: can a macro or inline generate this?
   def take[C1 <: Singleton, X](c1: C1)(using finder: FindAll[TableColumns, (C1), X]): Select[TableName, TableColumns, X] = Select(table, finder.get(table.columns))

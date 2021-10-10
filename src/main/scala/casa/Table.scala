@@ -1,9 +1,19 @@
 package casa
 
-import casa.utils.ColumnsFactory
+import casa.utils.{ColumnsFactory, Finder}
 
-trait Table[Name, Columns](using val name: DbIdentifier[Name], val columnsFactory: ColumnsFactory[Columns]):
 
-  val columns: Columns = columnsFactory.value
+trait Selectable[Columns]:
+  def columns: Columns
 
-  override def toString: String = name.value
+  def apply[Tag <: Singleton, Needle](tag: Tag)(
+    using
+    finder: Finder[Columns, Needle, Tag]
+  ): Needle = finder.find(columns)
+
+
+trait Table[Name, Columns](using val name: DbIdentifier[Name], val columnsFactory: ColumnsFactory[Columns]) extends Selectable[Columns]:
+
+  override val columns: Columns = columnsFactory.value
+
+  override val toString: String = name.value
