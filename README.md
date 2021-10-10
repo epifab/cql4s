@@ -1,6 +1,6 @@
 # Casa
 
-Casa is a typesafe CQL (Cassandra Query Language) for *Scala 3*, cats effect and fs2.
+Casa is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2.
 
 
 ## Why Casa
