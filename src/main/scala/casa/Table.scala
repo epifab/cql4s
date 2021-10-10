@@ -2,8 +2,8 @@ package casa
 
 import casa.utils.ColumnsFactory
 
-trait Table[Name, Columns](using val name: DbIdentifier[Name], val columns: ColumnsFactory[Columns]):
+trait Table[Name, Columns](using val name: DbIdentifier[Name], val columnsFactory: ColumnsFactory[Columns]):
 
-  val fields: Columns = columns.value
+  val columns: Columns = columnsFactory.value
 
   override def toString: String = name.value
