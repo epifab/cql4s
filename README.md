@@ -1,12 +1,12 @@
-# Casa
+# CQL4s
 
-Casa is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
+CQL4s is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
 built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
 
 
-## Why Casa
+## Why CQL4s
 
-Casa brings Cassandra to the wonderful world of functional Scala through cats effect and fs2.
+CQL4s brings Cassandra to the wonderful world of functional Scala through cats effect and fs2.
 
 Thanks to its strongly typed DSL, it also helps to prevent common mistakes **at compile time**, such as 
 typos (referring to a non-existing table or column),
@@ -14,14 +14,14 @@ comparing fields of unrelated types,
 decoding the results of a query into an incompatible data structure,
 issues with placeholder encoding for queries and commands.
 
-Casa was strongly inspired by [Tydal](https://github.com/epifab/tydal3).
+CQL4s was strongly inspired by [Tydal](https://github.com/epifab/tydal3).
 
 
 
 ## Canonical example
 
 ```scala
-import casa.*
+import cql4s.*
 import cats.effect.{ExitCode, IO, IOApp}
 
 import java.time.Instant

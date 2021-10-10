@@ -8,7 +8,7 @@ val catsEffectVersion    = "3.2.9"
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "casa",
+    name := "cql4s",
     version := "0.1.0",
 
     fork := true,
