@@ -1,6 +1,13 @@
 version: '3'
 services:
   cassandra:
-    image: cassandra:4.0
+    build: container
     ports:
       - "9042:9042"
+    restart: always
+    volumes:
+      - ./.data:/var/lib/cassandra
+    environment:
+      CASSANDRA_NUM_TOKENS: 16
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_DC: testdc
