@@ -5,7 +5,7 @@ import cats.arrow.FunctionK
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.cql.{SimpleStatementBuilder, StatementBuilder}
+import com.datastax.oss.driver.api.core.cql.{AsyncResultSet, ResultSet, SimpleStatement, SimpleStatementBuilder, Statement, StatementBuilder}
 import com.datastax.oss.driver.api.core.session.Session
 
 import java.net.InetSocketAddress
@@ -26,21 +26,18 @@ class CassandraRuntime(protected val session: CqlSession):
       case head :: tail => buildStatement(statement.addPositionalValue(head), tail)
     }
 
+  def execute(cql: String, params: List[Any]): IO[AsyncResultSet] = {
+    val statement = buildStatement(new SimpleStatementBuilder(cql), params).build()
+    println(statement.getQuery)
+    println(statement.getPositionalValues)
+    IO.fromFuture(IO(session.executeAsync(statement).asScala))
+  }
+
   def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[IO, Output] =
     (input: Input) => {
-      val statement = buildStatement(new SimpleStatementBuilder(query.csql), query.encoder.encode(input)).build()
-
       for {
-        resultSet <-
-          fs2.Stream
-            .eval(IO.fromFuture(IO(session.executeAsync(statement).asScala)))
-
-        row <-
-          fs2.Stream
-            .eval(IO(Option(resultSet.one())))
-            .repeat
-            .collectWhile { case Some(row) => row }
-
+        resultSet <- fs2.Stream.eval(execute(query.csql, query.encoder.encode(input)))
+        row <- fs2.Stream.eval(IO(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
     }
 

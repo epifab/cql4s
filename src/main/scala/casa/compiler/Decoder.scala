@@ -8,7 +8,7 @@ trait Decoder[T]:
 
 
 trait DecoderAdapter[Raw, T] extends Decoder[T]:
-  override final def decode(row: Row): T = decode(row, 1)
+  override final def decode(row: Row): T = decode(row, 0)
   def decode(row: Row, state: Int): T
 
 object DecoderAdapter:
@@ -20,4 +20,6 @@ object DecoderAdapter:
       head.decode(row, state) *: tail.decode(row, state + 1)
 
   given column[Name, Type, JT, ST](using dbt: DbType.Aux[Type, JT, ST]): DecoderAdapter[Column[Name, Type], ST] with
-    def decode(row: Row, state: Int): ST = dbt.decode(row.get(state, dbt.codec))
+    def decode(row: Row, state: Int): ST =
+      println(s"About to decode ${dbt.dbName} for $state, ${row.getObject(state)}")
+      dbt.decode(row.get(state, dbt.codec))

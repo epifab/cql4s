@@ -1,9 +1,13 @@
 package casa
 
+import casa.compiler.{Query, QueryCompiler}
 import casa.utils.FindAll
 
 
 class Select[TableName, TableColumns, Columns](val table: Table[TableName, TableColumns], val columns: Columns):
+
+  def compile[Input, Output](using compiler: QueryCompiler[this.type, Input, Output]): Query[Input, Output] =
+    compiler.build(this)
 
   // todo: can a macro or inline generate this?
   def take[C1 <: Singleton, X](c1: C1)(using finder: FindAll[TableColumns, (C1), X]): Select[TableName, TableColumns, X] = Select(table, finder.get(table.columns))

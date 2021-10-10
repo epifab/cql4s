@@ -16,7 +16,7 @@ object QueryCompiler:
   ): QueryCompiler[Select[TableName, TableColumns, Columns], Input, Output] with
     def build(select: Select[TableName, TableColumns, Columns]): Query[Input, Output] =
       val cql = fields.build(select.columns, ", ")
-        .wrap("SELECT ", s" FROM ${select.table.name}")
+        .wrap("SELECT ", s" FROM ${select.table.name.escaped}")
         .cql
 
       Query(cql, encoder, decoder)
