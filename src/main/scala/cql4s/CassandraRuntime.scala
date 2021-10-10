@@ -19,15 +19,13 @@ case class CassandraConfig(host: String, port: Int, credentials: Option[Cassandr
 class CassandraRuntime(protected val session: CqlSession):
   @tailrec
   private def buildStatement(statement: SimpleStatementBuilder, encoded: List[Any]): SimpleStatementBuilder =
-    encoded match {
+    encoded match
       case Nil => statement
       case head :: tail => buildStatement(statement.addPositionalValue(head), tail)
-    }
 
-  def execute(cql: String, params: List[Any]): IO[AsyncResultSet] = {
+  def execute(cql: String, params: List[Any]): IO[ResultSet] =
     val statement = buildStatement(new SimpleStatementBuilder(cql), params).build()
-    IO.fromFuture(IO(session.executeAsync(statement).asScala))
-  }
+    IO.blocking(session.execute(statement))
 
   def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[IO, Output] =
     (input: Input) =>
@@ -42,26 +40,22 @@ class CassandraRuntime(protected val session: CqlSession):
 
   def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => IO[Unit] =
     (rows: Iterable[Input]) =>
-      val batch = rows
+      IO.blocking(rows
         .map(placeholders => buildStatement(new SimpleStatementBuilder(command.cql), command.encoder.encode(placeholders)).build())
         .foldLeft(new BatchStatementBuilder(batchType)) { case (batch, statement) => batch.addStatement(statement) }
-        .build()
-
-      IO.fromFuture(IO(session.executeAsync(batch).asScala)).void
+        .build()).void
 
 
 object CassandraRuntime:
   def apply(config: CassandraConfig): Resource[IO, CassandraRuntime] =
     Resource.make(
-      IO.fromFuture(IO(
+      IO.blocking(
         CqlSession
           .builder()
           .addContactPoint(new InetSocketAddress(config.host, config.port))
           .withLocalDatacenter(config.datacenter)
           .pipe { builder => config.credentials.fold(builder)(creds => builder.withAuthCredentials(creds.username, creds.password)) }
           .withKeyspace(config.keyspace)
-          .buildAsync()
-          .asScala
-        )
+          .build()
       ).map(new CassandraRuntime(_))
     )(runtime => IO(runtime.session.close()))
