@@ -26,7 +26,16 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
     )
   ]
 
-  val insert: Command[(UUID, Instant, List[String], Option[String], Map[String, BigDecimal], Set[String])] =
+  case class Event(
+    id: UUID,
+    startTime: Instant,
+    artists: List[String],
+    venue: Option[String],
+    prices: Map[String, BigDecimal],
+    tags: Set[String]
+  )
+
+  val insert: Command[Event] =
     Insert
       .into(events)
       .fields(g => (
@@ -38,8 +47,9 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
         g("tags")
       ))
       .compile
+      .pcontramap[Event]
 
-  val select: Query[EmptyTuple, (UUID, Instant, List[String], Option[String], Map[String, BigDecimal], Set[String])] =
+  val select: Query[EmptyTuple, Event] =
     Select
       .from(events)
       .take(g => (
@@ -51,10 +61,11 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
         g("tags")
       ))
       .compile
+      .pmap[Event]
 
   "Can insert / retrieve data" in {
 
-    val event = (
+    val event = Event(
       UUID.randomUUID(),
       Instant.now().truncatedTo(ChronoUnit.MILLIS),
       List("Radiohead", "Sigur Ros"),

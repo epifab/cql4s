@@ -36,13 +36,13 @@ class CassandraRuntime(protected val session: CqlSession):
   def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[IO, Output] =
     (input: Input) =>
       for {
-        resultSet <- fs2.Stream.eval(execute(query.csql, query.encoder.encode(input)))
+        resultSet <- fs2.Stream.eval(execute(query.cql, query.encoder.encode(input)))
         row <- fs2.Stream.eval(IO(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
 
   def execute[Input](command: Command[Input]): Input => IO[Unit] =
     (input: Input) =>
-      execute(command.csql, command.encoder.encode(input)).void
+      execute(command.cql, command.encoder.encode(input)).void
 
 
 object CassandraRuntime:

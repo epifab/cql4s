@@ -5,6 +5,10 @@ import com.datastax.oss.driver.api.core.cql.Row
 
 trait Decoder[T]:
   def decode(row: Row): T
+  def map[U](f: T => U): Decoder[U] = DecoderMap(this, f)
+
+class DecoderMap[T, U](tDec: Decoder[T], map: T => U) extends Decoder[U]:
+  def decode(row: Row): U = map(tDec.decode(row))
 
 
 trait DecoderAdapter[Raw, T] extends Decoder[T]:

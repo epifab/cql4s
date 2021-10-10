@@ -5,6 +5,10 @@ import com.datastax.oss.driver.api.core.cql.Row
 
 trait Encoder[T]:
   def encode(params: T): List[Any]
+  def contramap[U](f: U => T): Encoder[U] = EncoderContramap(this, f)
+
+class EncoderContramap[U, T](tEnc: Encoder[T], contramap: U => T) extends Encoder[U]:
+  def encode(params: U): List[Any] = tEnc.encode(contramap(params))
 
 
 trait EncoderAdapter[Raw, T] extends Encoder[T]
