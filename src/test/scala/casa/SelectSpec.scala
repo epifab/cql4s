@@ -49,7 +49,7 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
       .compile
       .pcontramap[Event]
 
-  val select: Query[EmptyTuple, Event] =
+  val select: Query[Unit, Event] =
     Select
       .from(events)
       .take(g => (
@@ -81,7 +81,7 @@ class SelectSpec extends AnyFreeSpec with Matchers with CassandraAware:
       for {
         _ <- cassandra.execute("TRUNCATE events", List.empty)
         _ <- cassandra.execute(insert)(event)
-        result <- cassandra.execute(select)(Tuple()).compile.toList
+        result <- cassandra.execute(select)(()).compile.toList
       } yield result
     ).unsafeRunSync() shouldBe List(event)
 
