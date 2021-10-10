@@ -81,6 +81,6 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
         _ <- cassandra.executeBatch(insert, BatchType.LOGGED)(List(event1, event2))
         result <- cassandra.execute(select)(()).compile.toList
       } yield result
-    ).unsafeRunSync() shouldBe List(event1, event2)
+    ).unsafeRunSync().toSet shouldBe Set(event1, event2)
 
   }
