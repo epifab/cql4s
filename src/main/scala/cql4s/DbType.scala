@@ -62,6 +62,7 @@ type list[T]
 type set[T]
 
 type nullable[T]
+type json[T]
 
 
 object DbType:
@@ -172,3 +173,15 @@ object DbType:
   given nullableType[T, JT >: Null, ST](using nested: DbType.Aux[T, JT, ST]): DbType[nullable[T]] with DbTypeImpl[nullable[T], JT, Option[ST]](s => s.map(nested.encode).orNull, j => Option(j).map(nested.decode)) with
     override val codec: TypeCodec[JT] = nested.codec
     override val dbName: String = nested.dbName
+
+  given jsonType[T](using io.circe.Encoder[T], io.circe.Decoder[T]): DbType[json[T]] with
+    import io.circe.syntax._
+    import io.circe.parser.{decode => decodeJson}
+
+    override type JavaType = String
+    override type ScalaType = T
+    override def codec: TypeCodec[jsonType.this.JavaType] = TypeCodecs.TEXT
+    override def dbName: String = "text"
+
+    override def encode: T => String = _.asJson.noSpaces
+    override def decode: String => ScalaType = s => decodeJson[T](s).getOrElse(throw RuntimeException(s"Cannot decode json '$s'"))

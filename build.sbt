@@ -4,6 +4,7 @@ val scala3Version = "3.0.2"
 val fs2Version           = "3.1.3"
 val catsVersion          = "2.6.1"
 val catsEffectVersion    = "3.2.9"
+val circeVersion         = "0.14.1"
 
 lazy val root = project
   .in(file("."))
@@ -18,12 +19,15 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "com.datastax.oss" % "java-driver-core" % "4.13.0",
 
-      "co.fs2"           %% "fs2-core"    % fs2Version,
-      "co.fs2"           %% "fs2-io"      % fs2Version,
-      "org.typelevel"    %% "cats-core"   % catsVersion,
-      "org.typelevel"    %% "cats-effect" % catsEffectVersion,
+      "co.fs2"           %% "fs2-core"      % fs2Version,
+      "co.fs2"           %% "fs2-io"        % fs2Version,
+      "org.typelevel"    %% "cats-core"     % catsVersion,
+      "org.typelevel"    %% "cats-effect"   % catsEffectVersion,
+      "io.circe"         %% "circe-core"    % circeVersion,
+      "io.circe"         %% "circe-generic" % circeVersion,
+      "io.circe"         %% "circe-parser"  % circeVersion,
 
-      "org.scalactic"    %% "scalactic"   % "3.2.9" % Test,
-      "org.scalatest"    %% "scalatest"   % "3.2.9" % Test
+      "org.scalactic"    %% "scalactic"     % "3.2.9" % Test,
+      "org.scalatest"    %% "scalatest"     % "3.2.9" % Test
     )
   )

@@ -14,6 +14,11 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   implicit val ioRuntime: IORuntime = IORuntime.global
 
+  case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: String)
+
+  object Metadata:
+    implicit val jsonCodec: io.circe.Codec[Metadata] = io.circe.generic.semiauto.deriveCodec
+
   object events extends Table[
     "events",
     (
@@ -22,7 +27,8 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
       "artists" :=: list[varchar],
       "venue" :=: nullable[text],
       "prices" :=: map[varchar, decimal],
-      "tags" :=: set[varchar]
+      "tags" :=: set[varchar],
+      "metadata" :=: json[Metadata]
     )
   ]
 
@@ -32,7 +38,8 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
     artists: List[String],
     venue: Option[String],
     prices: Map[String, BigDecimal],
-    tags: Set[String]
+    tags: Set[String],
+    metadata: Metadata
   )
 
   val insert: Command[Event] =
@@ -59,7 +66,8 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
         "USD" -> BigDecimal(20.5),
         "GBP" -> BigDecimal(16)
       ),
-      Set("rock", "post rock", "indie")
+      Set("rock", "post rock", "indie"),
+      Metadata(Instant.now, None, "epifab")
     )
 
     val event2 = event1.copy(
