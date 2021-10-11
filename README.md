@@ -65,17 +65,18 @@ object Program extends IOApp:
       .compile
       .pcontramap[Event]
 
-  val select: Query[Unit, Event] =
+  val select: Query[UUID, Event] =
     Select
       .from(events)
       .take(_.*)
+      .where(_("id") === :?)
       .compile
       .pmap[Event]
 
   def run(args: List[String]): IO[ExitCode] =
     CassandraRuntime(cassandraConfig)
       .use { cassandra =>
-        cassandra.execute(select)(())
+        cassandra.execute(select)(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
           .map(_.copy(prices = Map("GBP" -> BigDecimal(49.99))))
           .evalTap(cassandra.execute(insert))
           .compile

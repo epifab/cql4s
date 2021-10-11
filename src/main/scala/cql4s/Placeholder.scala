@@ -1,6 +1,8 @@
 package cql4s
 
-final class Placeholder[Name, T](using val name: DbIdentifier[Name], val dbType: DbType[T]) extends Field[T]
+final class Placeholder[T](using val dbType: DbType[T]) extends Field[T]
+
+object :?
 
 case class KeyValue[A <: String with Singleton, +T](key: A, value: T)
 

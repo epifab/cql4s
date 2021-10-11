@@ -9,8 +9,8 @@ trait Assignments[-From, To]:
   def apply(from: From): To
 
 object Assignments:
-  given column[Name <: String with Singleton, T: DbType](using columnName: ValueOf[Name]): Assignments[Column[Name, T], (Name ~~> Placeholder[Name, T])] with
-    def apply(from: Column[Name, T]): Name ~~> Placeholder[Name, T] = columnName.value ~~> Placeholder[Name, T]
+  given column[Name <: String with Singleton, T: DbType](using columnName: ValueOf[Name]): Assignments[Column[Name, T], (Name ~~> Placeholder[T])] with
+    def apply(from: Column[Name, T]): Name ~~> Placeholder[T] = columnName.value ~~> Placeholder[T]
 
   given expr[Name <: String with Singleton, T: DbType, Expr <: Field[_]](using columnName: ValueOf[Name]): Assignments[Assignment[Column[Name, T], Expr], (Name ~~> Expr)] with
     def apply(from: Assignment[Column[Name, T], Expr]): Name ~~> Expr = columnName.value ~~> from.value

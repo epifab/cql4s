@@ -36,16 +36,9 @@
 - json[T] - json encoded text
 
 
-## Select
+## DML
 
-- Select a specific list of fields from a table
-- Group by and aggregations are not supported yet
-- Where clause is not supported yet
-- Limit clause is not supported yet
-- Order by clause is not supported yet
-
-## Commands
-
+- Select (missing support for `GROUP BY`, `LIMIT` and `ORDER BY` clauses)
 - Insert (missing support for `IF NOT EXISTS` and `WITH TIMESTAMP`)
 - Update not supported yet
 - Delete not supported yet

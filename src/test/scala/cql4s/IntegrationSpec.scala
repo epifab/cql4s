@@ -68,10 +68,11 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
       .compile
       .pcontramap[Event]
 
-  val select: Query[Unit, Event] =
+  val select: Query[UUID, Event] =
     Select
       .from(events)
       .take(_.*)
+      .where(_("id") === :?)
       .compile
       .pmap[Event]
 
@@ -83,7 +84,7 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
   }
 
   "Select CQL" in {
-    select.cql shouldBe "SELECT id, start_time, artists, venue, prices, tags, metadata FROM events"
+    select.cql shouldBe "SELECT id, start_time, artists, venue, prices, tags, metadata FROM events WHERE id = ?"
   }
 
   "Can insert / retrieve data" in {
@@ -91,8 +92,8 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
       for {
         _ <- cassandra.execute("TRUNCATE events", List.empty)
         _ <- cassandra.executeBatch(insert, BatchType.LOGGED)(List(event1, event2))
-        result <- cassandra.execute(select)(()).compile.toList
+        result <- cassandra.execute(select)(event1.id).compile.toList
       } yield result
-    ).unsafeRunSync().toSet shouldBe Set(event1, event2)
+    ).unsafeRunSync().toSet shouldBe Set(event1)
 
   }
