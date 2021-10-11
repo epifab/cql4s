@@ -9,6 +9,7 @@ import org.scalatest.matchers.should.Matchers
 
 import java.time.{Instant, LocalDate, ZoneOffset}
 import java.util.UUID
+import scala.concurrent.duration.*
 
 class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
@@ -42,9 +43,28 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
     metadata: Metadata
   )
 
+  val event1 = Event(
+    UUID.randomUUID(),
+    LocalDate.now.atStartOfDay.toInstant(ZoneOffset.UTC),
+    List("Radiohead", "Sigur Ros"),
+    Some("Roundhouse"),
+    Map(
+      "USD" -> BigDecimal(20.5),
+      "GBP" -> BigDecimal(16)
+    ),
+    Set("rock", "post rock", "indie"),
+    Metadata(Instant.now, None, "epifab")
+  )
+
+  val event2 = event1.copy(
+    id = UUID.randomUUID(),
+    startTime = LocalDate.now.plusDays(1).atStartOfDay.toInstant(ZoneOffset.UTC)
+  )
+
   val insert: Command[Event] =
     Insert
       .into(events)
+      .usingTtl(15.seconds)
       .compile
       .pcontramap[Event]
 
@@ -55,26 +75,18 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
       .compile
       .pmap[Event]
 
+  "Insert CQL" in {
+    insert.cql shouldBe "INSERT INTO events" +
+      " (id, start_time, artists, venue, prices, tags, metadata)" +
+      " VALUES (?, ?, ?, ?, ?, ?, ?)" +
+      " USING TTL 15"
+  }
+
+  "Select CQL" in {
+    select.cql shouldBe "SELECT id, start_time, artists, venue, prices, tags, metadata FROM events"
+  }
+
   "Can insert / retrieve data" in {
-
-    val event1 = Event(
-      UUID.randomUUID(),
-      LocalDate.now.atStartOfDay.toInstant(ZoneOffset.UTC),
-      List("Radiohead", "Sigur Ros"),
-      Some("Roundhouse"),
-      Map(
-        "USD" -> BigDecimal(20.5),
-        "GBP" -> BigDecimal(16)
-      ),
-      Set("rock", "post rock", "indie"),
-      Metadata(Instant.now, None, "epifab")
-    )
-
-    val event2 = event1.copy(
-      id = UUID.randomUUID(),
-      startTime = LocalDate.now.plusDays(1).atStartOfDay.toInstant(ZoneOffset.UTC)
-    )
-
     cassandraRuntime.use(cassandra =>
       for {
         _ <- cassandra.execute("TRUNCATE events", List.empty)

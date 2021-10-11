@@ -40,10 +40,12 @@ class CassandraRuntime(protected val session: CqlSession):
 
   def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => IO[Unit] =
     (rows: Iterable[Input]) =>
-      IO.blocking(rows
-        .map(placeholders => buildStatement(new SimpleStatementBuilder(command.cql), command.encoder.encode(placeholders)).build())
-        .foldLeft(new BatchStatementBuilder(batchType)) { case (batch, statement) => batch.addStatement(statement) }
-        .build()).void
+      val statement: BatchStatement = 
+        rows
+          .map(placeholders => buildStatement(new SimpleStatementBuilder(command.cql), command.encoder.encode(placeholders)).build())
+          .foldLeft(new BatchStatementBuilder(batchType)) { case (batch, statement) => batch.addStatement(statement) }
+          .build()
+      IO.blocking(session.execute(statement)).void
 
 
 object CassandraRuntime:
