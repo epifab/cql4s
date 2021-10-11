@@ -1,6 +1,6 @@
 # CQL4s
 
-[![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://travis-ci.com/epifab/cql4s)
+[![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://app.travis-ci.com/epifab/cql4s)
 
 CQL4s is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
 built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
@@ -59,6 +59,12 @@ object Program extends IOApp:
     datacenter = "testdc"
   )
 
+  val insert: Command[Event] =
+    Insert
+      .into(events)
+      .compile
+      .pcontramap[Event]
+
   val select: Query[Unit, Event] =
     Select
       .from(events)
@@ -69,15 +75,18 @@ object Program extends IOApp:
   def run(args: List[String]): IO[ExitCode] =
     CassandraRuntime(cassandraConfig)
       .use { cassandra =>
-        val stream: fs2.Stream[IO, Event] = cassandra.execute(select)(())
-        stream.evalTap(event => IO(println(event))).compile.drain
+        cassandra.execute(select)(())
+          .map(_.copy(prices = Map("GBP" -> BigDecimal(49.99))))
+          .evalTap(cassandra.execute(insert))
+          .compile
+          .drain
       }
       .as(ExitCode.Success)
 ```
 
 ## Support
 
-Nothing is supported yet.
+Find out all supported feature [here](SUPPORT.md).
 
 
 ## Testing
