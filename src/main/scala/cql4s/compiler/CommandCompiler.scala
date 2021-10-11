@@ -17,5 +17,6 @@ object CommandCompiler:
     def build(command: Insert[TableName, TableColumns, KeyValues]): Command[Input] =
       val fragment = CompiledFragment(s"INSERT INTO ${command.table.name.escaped}") ++
         fields.build(command.keyValues, ", ").wrap("(", ")") ++
-        values.build(command.keyValues, ", ").wrap("VALUES (", ")")
+        values.build(command.keyValues, ", ").wrap("VALUES (", ")") ++
+        CompiledFragment(command.ttl.map(ttl => s"USING TTL ${ttl.toSeconds}"))
       Command(fragment.cql, encoder)

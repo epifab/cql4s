@@ -50,3 +50,4 @@ case class CompiledFragment[Input <: Tuple](parts: List[String | State[Int, Stri
 object CompiledFragment:
   def empty: CompiledFragment[EmptyTuple] = CompiledFragment(Nil, EmptyTuple)
   def apply(const: String): CompiledFragment[EmptyTuple] = CompiledFragment(const :: Nil, EmptyTuple)
+  def apply(const: Option[String]): CompiledFragment[EmptyTuple] = CompiledFragment(const.toList, EmptyTuple)
