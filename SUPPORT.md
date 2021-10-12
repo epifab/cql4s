@@ -39,7 +39,7 @@
 ## DML
 
 - Select (missing support for `GROUP BY`, `LIMIT` and `ORDER BY` clauses)
-- Insert (missing support for `IF NOT EXISTS` and `WITH TIMESTAMP`)
-- Update not supported yet
+- Insert (missing support for `IF NOT EXISTS`)
+- Update (missing support for `IF EXISTS`)
 - Delete not supported yet
 - Truncate not supported yet

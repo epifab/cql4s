@@ -9,17 +9,21 @@ trait Decoder[T]:
 class DecoderMap[T, U](tDec: Decoder[T], map: T => U) extends Decoder[U]:
   def decode(row: Row): U = map(tDec.decode(row))
 
-trait DecoderAdapter[Raw, T] extends Decoder[T]:
+trait DecoderAdapter[-Raw, T] extends Decoder[T]:
   override final def decode(row: Row): T = decode(row, 0)
   def decode(row: Row, state: Int): T
 
-trait DefaultDecoderAdapter[Raw, T] extends DecoderAdapter[Raw, T]
+trait DefaultDecoderAdapter[-Raw, T] extends DecoderAdapter[Raw, T]
 
 object DefaultDecoderAdapter:
   given empty: DefaultDecoderAdapter[EmptyTuple, EmptyTuple] with
     def decode(row: Row, state: Int): EmptyTuple = EmptyTuple
 
-  given nonEmpty[RawHead, Head, RawTail <: Tuple, Tail <: Tuple](using head: DefaultDecoderAdapter[RawHead, Head], tail: DefaultDecoderAdapter[RawTail, Tail]): DefaultDecoderAdapter[RawHead *: RawTail, Head *: Tail] with
+  given nonEmpty[RawHead, Head, RawTail <: Tuple, Tail <: Tuple](
+    using
+    head: DefaultDecoderAdapter[RawHead, Head],
+    tail: DefaultDecoderAdapter[RawTail, Tail]
+  ): DefaultDecoderAdapter[RawHead *: RawTail, Head *: Tail] with
     def decode(row: Row, state: Int): Head *: Tail =
       head.decode(row, state) *: tail.decode(row, state + 1)
 

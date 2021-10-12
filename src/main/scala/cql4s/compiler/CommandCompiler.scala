@@ -7,16 +7,43 @@ import scala.deriving.Mirror
 trait CommandCompiler[-C, Input]:
   def build(command: C): Command[Input]
 
-object CommandCompiler:
-  given insert[TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple, Input] (
-   using
-   fields: ListFragment[KeyFragment, KeyValues, A],
-   values: ListFragment[ValueFragment, KeyValues, B],
-   encoder: EncoderAdapter[A Concat B, Input]
-  ): CommandCompiler[Insert[TableName, TableColumns, KeyValues], Input] with
-    def build(command: Insert[TableName, TableColumns, KeyValues]): Command[Input] =
-      val fragment = CompiledFragment(s"INSERT INTO ${command.table.name.escaped}") ++
+trait CommandFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
+
+object CommandFragment:
+
+  def updateParameters(up: UpdateParameters): Option[String] =
+    (up.ttl, up.timestamp) match
+      case (None, None) => None
+      case (a, b) => Some("USING " + (a.map("TTL " + _.toSeconds).toList ++ b.map(ts => "TIMESTAMP " + (ts.toEpochMilli * 1000))).mkString(" AND "))
+
+  given insert[TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple] (
+    using
+    fields: ListFragment[KeyFragment, KeyValues, A],
+    values: ListFragment[ValueFragment, KeyValues, B]
+  ): CommandFragment[Insert[TableName, TableColumns, KeyValues], A Concat B] with
+    def build(command: Insert[TableName, TableColumns, KeyValues]): CompiledFragment[A Concat B] = {
+      CompiledFragment(s"INSERT INTO ${command.table.name.escaped}") ++
         fields.build(command.keyValues, ", ").wrap("(", ")") ++
         values.build(command.keyValues, ", ").wrap("VALUES (", ")") ++
-        CompiledFragment(command.ttl.map(ttl => s"USING TTL ${ttl.toSeconds}"))
-      Command(fragment.cql, encoder)
+        updateParameters(command.updateParameters)
+    }
+
+  given update[TableName, TableColumns, KeyValues, Where <: LogicalExpr, A <: Tuple, B <: Tuple] (
+    using
+    keyValues: ListFragment[KeyValueFragment, KeyValues, A],
+    where: LogicalExprFragment[Where, B]
+  ): CommandFragment[Update[TableName, TableColumns, KeyValues, Where], A Concat B] with
+    def build(command: Update[TableName, TableColumns, KeyValues, Where]): CompiledFragment[A Concat B] =
+      CompiledFragment(s"UPDATE ${command.table.name.escaped}") ++
+        updateParameters(command.updateParameters) ++
+        keyValues.build(command.keyValues, ", ").prepend("SET ") ++
+        where.build(command.where).prepend("WHERE ")
+
+object CommandCompiler:
+  given [C, I <: Tuple, Input](
+    using
+    commandFragment: CommandFragment[C, I],
+    encoder: EncoderAdapter[I, Input]
+  ): CommandCompiler[C, Input] with
+    def build(command: C): Command[Input] =
+      Command(commandFragment.build(command).cql, encoder)
