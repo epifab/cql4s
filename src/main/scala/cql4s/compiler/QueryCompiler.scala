@@ -20,6 +20,7 @@ object QueryCompiler:
         fields
           .build(select.fields, ", ")
           .wrap("SELECT ", s" FROM ${select.table.name.escaped}") ++
-        where.build(select.where).prepend("WHERE ")
+        where.build(select.where).prepend("WHERE ") ++
+        Option.when(select.allowFiltering)("ALLOW FILTERING")
 
       Query(fragment.cql, encoder, decoder)
