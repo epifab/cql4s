@@ -12,7 +12,7 @@ trait Selectable[Columns]:
   ): Needle = finder.find(*)
 
 
-trait Table[Name, Columns](using val name: DbIdentifier[Name], val columnsFactory: ColumnsFactory[Columns]) extends Selectable[Columns]:
+trait Table[Keyspace, Name, Columns](using val keyspace: DbIdentifier[Keyspace], val name: DbIdentifier[Name], val columnsFactory: ColumnsFactory[Columns]) extends Selectable[Columns]:
 
   override val `*`: Columns = columnsFactory.value
 

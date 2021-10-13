@@ -14,7 +14,14 @@ import scala.jdk.FutureConverters.*
 import scala.util.chaining.*
 
 case class CassandraCredentials(username: String, password: String)
-case class CassandraConfig(host: String, port: Int, credentials: Option[CassandraCredentials], keyspace: String, datacenter: String)
+
+case class CassandraConfig(
+  host: String,
+  port: Int,
+  credentials: Option[CassandraCredentials],
+  keyspace: Option[String],
+  datacenter: String
+)
 
 class CassandraRuntime(protected val session: CqlSession):
   @tailrec
@@ -57,7 +64,7 @@ object CassandraRuntime:
           .addContactPoint(new InetSocketAddress(config.host, config.port))
           .withLocalDatacenter(config.datacenter)
           .pipe { builder => config.credentials.fold(builder)(creds => builder.withAuthCredentials(creds.username, creds.password)) }
-          .withKeyspace(config.keyspace)
+          .pipe { builder => config.keyspace.fold(builder)(keyspace => builder.withKeyspace(keyspace)) }
           .build()
       ).map(new CassandraRuntime(_))
     )(runtime => IO(runtime.session.close()))

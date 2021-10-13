@@ -25,7 +25,7 @@ object DefaultEncoderAdapter:
     def encode(params: Head *: Tail): List[Any] =
       head.encode(params.head) ++ tail.encode(params.tail)
 
-  given placeholder[Type, JT, ST](using dt: DataTypeCodec[Type, JT, ST]): DefaultEncoderAdapter[Placeholder[Type], ST] with
+  given field[Type, JT, ST](using dt: DataTypeCodec[Type, JT, ST]): DefaultEncoderAdapter[Field[Type], ST] with
     def encode(params: ST): List[Any] = List(dt.encode(params))
 
 trait LowPriorityEncoderAdapter:

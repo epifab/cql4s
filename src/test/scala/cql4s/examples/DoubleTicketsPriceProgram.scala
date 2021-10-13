@@ -2,20 +2,11 @@ package cql4s.examples
 
 import cats.effect.{ExitCode, IO, IOApp}
 import cql4s.*
+import cql4s.keyspaces.Music.{Event, Metadata, events}
 
 import java.time.Instant
 import java.util.{Currency, UUID}
 import scala.concurrent.duration.*
-
-
-case class Event(
-  id: UUID,
-  venue: String,
-  startTime: Instant,
-  artists: List[String],
-  prices: Map[Currency, BigDecimal],
-  tags: Set[String]
-)
 
 trait EventRepo:
   def findEventsByVenue(venue: String): fs2.Stream[IO, Event]
@@ -28,23 +19,6 @@ val USD = Currency.getInstance("USD")
 
 
 object EventRepo:
-  type currency
-
-  given currencyCodec: DataTypeCodec[currency, String, Currency] =
-    DataType.textCodec.map[currency, Currency](_.getCurrencyCode, Currency.getInstance)
-
-  object events extends Table[
-    "events",
-    (
-      "id" :=: uuid,
-      "venue" :=: text,
-      "start_time" :=: timestamp,
-      "artists" :=: list[varchar],
-      "prices" :=: map[currency, decimal],
-      "tags" :=: set[varchar]
-    )
-  ]
-
   private val insert: Command[Event] =
     Insert
       .into(events)
@@ -77,7 +51,7 @@ object DoubleTicketsPriceProgram extends IOApp:
     "0.0.0.0",
     9042,
     credentials = None,
-    keyspace = "music",
+    keyspace = None,
     datacenter = "testdc"
   )
 
@@ -89,7 +63,12 @@ object DoubleTicketsPriceProgram extends IOApp:
         artists = List("Radiohead", "Sigur Ros"),
         venue = venue,
         prices = Map(GBP -> 49.99, USD -> 79.99),
-        tags = Set("rock", "post rock", "indie")
+        tags = Set("rock", "post rock", "indie"),
+        metadata = Metadata(
+          createdAt = Instant.now,
+          updatedAt = None,
+          author = "epifab"
+        )
       )
     }
 

@@ -8,8 +8,8 @@ import scala.concurrent.duration.FiniteDuration
 
 case class UpdateParameters(ttl: Option[FiniteDuration], timestamp: Option[Instant])
 
-class Insert[TableName, TableColumns, KeyValues](
-  val table: Table[TableName, TableColumns],
+class Insert[Keyspace, TableName, TableColumns, KeyValues](
+  val table: Table[Keyspace, TableName, TableColumns],
   val keyValues: KeyValues,
   val updateParameters: UpdateParameters
 ):
@@ -17,13 +17,13 @@ class Insert[TableName, TableColumns, KeyValues](
   def fields[A, NewKeyValues](f: Selectable[TableColumns] => A)(
     using
     assignments: Assignments[A, NewKeyValues]
-  ): Insert[TableName, TableColumns, NewKeyValues] =
-    Insert[TableName, TableColumns, NewKeyValues](table, assignments(f(table)), updateParameters)
+  ): Insert[Keyspace, TableName, TableColumns, NewKeyValues] =
+    Insert[Keyspace, TableName, TableColumns, NewKeyValues](table, assignments(f(table)), updateParameters)
     
-  def usingTtl(ttl: FiniteDuration): Insert[TableName, TableColumns, KeyValues] =
+  def usingTtl(ttl: FiniteDuration): Insert[Keyspace, TableName, TableColumns, KeyValues] =
     Insert(table, keyValues, updateParameters.copy(ttl = Some(ttl)))
 
-  def usingTimestamp(timestamp: Instant): Insert[TableName, TableColumns, KeyValues] =
+  def usingTimestamp(timestamp: Instant): Insert[Keyspace, TableName, TableColumns, KeyValues] =
     Insert(table, keyValues, updateParameters.copy(timestamp = Some(timestamp)))
 
   def compile[Input](using compiler: CommandCompiler[this.type, Input]): Command[Input] =
@@ -31,7 +31,7 @@ class Insert[TableName, TableColumns, KeyValues](
 
 
 object Insert:
-  def into[TableName, TableColumns, KeyValues](table: Table[TableName, TableColumns])(
+  def into[Keyspace, TableName, TableColumns, KeyValues](table: Table[Keyspace, TableName, TableColumns])(
     using
     assignments: Assignments[TableColumns, KeyValues]
-  ): Insert[TableName, TableColumns, KeyValues] = Insert(table, assignments(table.*), updateParameters = UpdateParameters(None, None))
+  ): Insert[Keyspace, TableName, TableColumns, KeyValues] = Insert(table, assignments(table.*), updateParameters = UpdateParameters(None, None))

@@ -10,7 +10,7 @@
 - date
 - decimal
 - double
-- duration
+- duration (not supported)
 - float
 - inet
 - int
@@ -32,6 +32,7 @@
 
 ### Extra
 
+- udt[Keyspace, Name, Components] - user defined type
 - nullable[T] - optional fields
 - json[T] - json encoded text
 

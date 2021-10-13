@@ -30,6 +30,7 @@ import java.time.Instant
 import java.util.UUID
 
 object events extends Table[
+  "music",
   "events",
   (
     "id" :=: uuid,
@@ -55,7 +56,7 @@ object Program extends IOApp:
     "0.0.0.0",
     9042,
     credentials = None,
-    keyspace = "music",
+    keyspace = None,
     datacenter = "testdc"
   )
 
