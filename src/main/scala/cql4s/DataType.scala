@@ -14,6 +14,7 @@ import java.time.*
 import java.util.UUID
 import scala.collection.JavaConverters.*
 import scala.concurrent.duration.Duration
+import scala.deriving.Mirror
 
 
 trait DataType[-T]:
@@ -75,7 +76,8 @@ type map[K, V]
 type list[T]
 type set[T]
 
-trait udt[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
+sealed private[cql4s] trait untypedUdt[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
+trait udt[P <: Product, Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 
 type nullable[T]
 type json[T]
@@ -227,14 +229,14 @@ object DataType:
     )
   }
 
-  given udtCodec[Keyspace, Name, Components, Output](
+  given _udtCodec[Keyspace, Name, Components, Output](
     using
     keyspace: DbIdentifier[Keyspace],
     name: DbIdentifier[Name],
     columnsFactory: ColumnsFactory[Components],
     decoderAdapter: DecoderAdapter[Components, Output],
     encoderAdapter: EncoderAdapter[Components, Output]
-  ): DataType[udt[Keyspace, Name, Components]] with
+  ): DataType[untypedUdt[Keyspace, Name, Components]] with
     override type JavaType = UdtValue
     override type ScalaType = Output
 
@@ -257,3 +259,12 @@ object DataType:
       })
 
     override val dbName: String = name.escaped
+
+  given udtCodec[Keyspace, Name, Components, Output, J >: Null, S <: Tuple, P <: Product](
+    using
+    dt: DataTypeCodec[untypedUdt[Keyspace, Name, Components], J, S],
+    m: Mirror.ProductOf[P],
+    i: m.MirroredElemTypes =:= S,
+    toProduct: S <:< Product
+  ): DataTypeCodec[udt[P, Keyspace, Name, Components], J, P] =
+    dt.map(p => i(Tuple.fromProductTyped(p)), x => m.fromProduct(toProduct(x)))

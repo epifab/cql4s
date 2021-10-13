@@ -5,7 +5,7 @@ import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, IOApp}
 import com.datastax.oss.driver.api.core.cql.BatchType
 import cql4s.keyspaces.Music.{Event, Metadata, events}
-import cql4s.keyspaces.People.{User, users}
+import cql4s.keyspaces.People.{User, Phone, Address, users}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -115,7 +115,7 @@ class IntegrationSpec extends AnyFreeSpec with Matchers with CassandraAware:
     "Insert and retrieve" in {
       cassandraRuntime.use { cassandra =>
         for {
-          _ <- cassandra.execute(insert)(User("john", ("Drayton Park", "London", "N5", List((44, "712345678")))))
+          _ <- cassandra.execute(insert)(User("john", Address("Drayton Park", "London", "N5", List(Phone(44, "712345678")))))
           _ <- cassandra.execute(select)(())
             .evalTap(u => IO(println(u)))
             .compile

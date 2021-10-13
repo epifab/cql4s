@@ -2,7 +2,6 @@ package cql4s
 package compiler
 
 import scala.Tuple.Concat
-import scala.deriving.Mirror
 
 trait QueryCompiler[-Q, Input, Output]:
   def build(query: Q): Query[Input, Output]

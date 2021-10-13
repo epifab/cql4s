@@ -3,12 +3,12 @@ package keyspaces
 
 
 object People:
-  case class User(
-    name: String,
-    address: (String, String, String, List[(Int, String)])
-  )
+  case class Phone(countryCode: Int, number: String)
+  case class Address(street: String, city: String, zip: String, phones: List[Phone])
+  case class User(name: String, address: Address)
 
-  class phone extends udt[
+  class _phone extends udt[
+    Phone,
     "people",
     "phone",
     (
@@ -17,14 +17,15 @@ object People:
     )
   ]
 
-  class address extends udt[
+  class _address extends udt[
+    Address,
     "people",
     "address",
     (
       "street" :=: text,
       "city" :=: text,
       "zip" :=: text,
-      "phones" :=: list[phone]
+      "phones" :=: list[_phone]
     )
   ]
 
@@ -33,6 +34,6 @@ object People:
     "users",
     (
       "name" :=: text,
-      "address" :=: address
+      "address" :=: _address
     )
   ]
