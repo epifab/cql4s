@@ -1,7 +1,7 @@
 package cql4s
 
 trait Field[T]:
-  given dbType: DbType[T]
+  given dataType: DataType[T]
 
   def ===[G <: Field[_]](right: G)(using AreComparable[this.type, G]): Equals[this.type, G] = Equals(this, right)
   def ===(p: :?.type)(using AreComparable[this.type, Placeholder[T]]): Equals[this.type, Placeholder[T]] = Equals(this, Placeholder[T])

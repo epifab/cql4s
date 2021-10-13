@@ -12,8 +12,8 @@ object ColumnsFactory:
   given empty: ColumnsFactory[EmptyTuple] with
     def value: EmptyTuple = EmptyTuple
 
-  given head[Name, T, Tail <: Tuple](using dbi: DbIdentifier[Name], dbt: DbType[T], tail: ColumnsFactory[Tail]): ColumnsFactory[Column[Name, T] *: Tail] with
+  given head[Name, T, Tail <: Tuple](using dbi: DbIdentifier[Name], dt: DataType[T], tail: ColumnsFactory[Tail]): ColumnsFactory[Column[Name, T] *: Tail] with
     def value: Column[Name, T] *: Tail = new Column[Name, T] *: tail.value
 
-  given singleColumn[Name, T](using dbi: DbIdentifier[Name], dbt: DbType[T]): ColumnsFactory[Column[Name, T]] with
+  given singleColumn[Name, T](using dbi: DbIdentifier[Name], dt: DataType[T]): ColumnsFactory[Column[Name, T]] with
     def value: Column[Name, T] = new Column[Name, T]

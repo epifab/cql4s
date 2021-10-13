@@ -1,19 +1,38 @@
 package cql4s.examples
 
 import cats.effect.{ExitCode, IO, IOApp}
-import cql4s.{CassandraRuntime, *}
+import cql4s.*
 
 import java.time.Instant
-import java.util.UUID
+import java.util.{Currency, UUID}
 import scala.concurrent.duration.*
+
+
+case class Event(
+  id: UUID,
+  venue: String,
+  startTime: Instant,
+  artists: List[String],
+  prices: Map[Currency, BigDecimal],
+  tags: Set[String]
+)
 
 trait EventRepo:
   def findEventsByVenue(venue: String): fs2.Stream[IO, Event]
   def addEvent(event: Event): IO[Unit]
-  def updateEventPrice(eventId: UUID, prices: Map[String, BigDecimal]): IO[Unit]
+  def updateEventPrice(eventId: UUID, prices: Map[Currency, BigDecimal]): IO[Unit]
+
+
+val GBP = Currency.getInstance("GBP")
+val USD = Currency.getInstance("USD")
 
 
 object EventRepo:
+  type currency
+
+  given currencyCodec: DataTypeCodec[currency, String, Currency] =
+    DataType.textCodec.map[currency, Currency](_.getCurrencyCode, Currency.getInstance)
+
   object events extends Table[
     "events",
     (
@@ -21,7 +40,7 @@ object EventRepo:
       "venue" :=: text,
       "start_time" :=: timestamp,
       "artists" :=: list[varchar],
-      "prices" :=: map[varchar, decimal],
+      "prices" :=: map[currency, decimal],
       "tags" :=: set[varchar]
     )
   ]
@@ -41,7 +60,7 @@ object EventRepo:
       .compile
       .pmap[Event]
 
-  private val update: Command[(Map[String, BigDecimal], UUID)] =
+  private val update: Command[(Map[Currency, BigDecimal], UUID)] =
     Update(events)
       .set(_("prices"))
       .where(_("id") === :?)
@@ -50,17 +69,8 @@ object EventRepo:
   def apply(cassandra: CassandraRuntime): EventRepo = new EventRepo:
     override def findEventsByVenue(venue: String): fs2.Stream[IO, Event] = cassandra.execute(select)(venue)
     override def addEvent(event: Event): IO[Unit] = cassandra.execute(insert)(event)
-    override def updateEventPrice(id: UUID, prices: Map[String, BigDecimal]): IO[Unit] = cassandra.execute(update)((prices, id))
+    override def updateEventPrice(id: UUID, prices: Map[Currency, BigDecimal]): IO[Unit] = cassandra.execute(update)((prices, id))
 
-
-case class Event(
-  id: UUID,
-  venue: String,
-  startTime: Instant,
-  artists: List[String],
-  prices: Map[String, BigDecimal],
-  tags: Set[String]
-)
 
 object DoubleTicketsPriceProgram extends IOApp:
   val cassandraConfig = CassandraConfig(
@@ -72,14 +82,16 @@ object DoubleTicketsPriceProgram extends IOApp:
   )
 
   def run(args: List[String]): IO[ExitCode] =
-    def event(date: String, venue: String) = Event(
-      id = UUID.randomUUID(),
-      startTime = Instant.parse(date),
-      artists = List("Radiohead", "Sigur Ros"),
-      venue = venue,
-      prices = Map("GBP" -> 49.99, "USD" -> 79.99),
-      tags = Set("rock", "post rock", "indie")
-    )
+    def event(date: String, venue: String) = {
+      Event(
+        id = UUID.randomUUID(),
+        startTime = Instant.parse(date),
+        artists = List("Radiohead", "Sigur Ros"),
+        venue = venue,
+        prices = Map(GBP -> 49.99, USD -> 79.99),
+        tags = Set("rock", "post rock", "indie")
+      )
+    }
 
     CassandraRuntime(cassandraConfig).map(EventRepo.apply)
       .use { repo =>

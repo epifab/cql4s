@@ -27,9 +27,9 @@ object DefaultDecoderAdapter:
     def decode(row: Row, state: Int): Head *: Tail =
       head.decode(row, state) *: tail.decode(row, state + 1)
 
-  given field[Type, F <: Field[Type], JT, ST](using dbt: DbType.Aux[Type, JT, ST]): DefaultDecoderAdapter[F, ST] with
+  given field[Type, F <: Field[Type], JT, ST](using dt: DataTypeCodec[Type, JT, ST]): DefaultDecoderAdapter[F, ST] with
     def decode(row: Row, state: Int): ST =
-      dbt.decode(row.get(state, dbt.codec))
+      dt.decode(row.get(state, dt.codec))
 
 trait LowPriorityDecoderAdapter:
   given default[A, B](using base: DefaultDecoderAdapter[A, B]): DecoderAdapter[A, B] = base

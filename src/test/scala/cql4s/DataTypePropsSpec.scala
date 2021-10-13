@@ -2,9 +2,9 @@ package cql4s
 
 import scala.util.NotGiven
 
-trait DbTypePropsSpec
+trait DataTypePropsSpec
 
-object AreComparableSpec extends DbTypePropsSpec:
+object AreComparableSpec extends DataTypePropsSpec:
   summon[AreComparable[varchar, varchar]]
   summon[AreComparable[text, varchar]]
   summon[NotGiven[AreComparable[int, varchar]]]

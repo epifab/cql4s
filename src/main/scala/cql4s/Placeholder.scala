@@ -1,6 +1,6 @@
 package cql4s
 
-final class Placeholder[T](using val dbType: DbType[T]) extends Field[T]
+final class Placeholder[T](using val dataType: DataType[T]) extends Field[T]
 
 object :?
 
