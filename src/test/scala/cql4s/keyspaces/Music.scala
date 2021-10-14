@@ -12,20 +12,39 @@ object Music:
     given currencyDataType: DataTypeCodec[currency, String, Currency] =
       DataType.textCodec.map[currency, Currency](_.getCurrencyCode, Currency.getInstance)
 
-  case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: String)
-
-  object Metadata:
-    implicit val jsonCodec: io.circe.Codec[Metadata] = io.circe.generic.semiauto.deriveCodec
+  case class User(name: String, email: Option[String])
+  case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
 
   case class Event(
     id: UUID,
     venue: String,
     startTime: Instant,
     artists: List[String],
-    prices: Map[Currency, BigDecimal],
+    tickets: Map[Currency, BigDecimal],
     tags: Set[String],
     metadata: Metadata
   )
+
+  class userType extends udt[
+    User,
+    "music",  // keyspace
+    "user",   // udt name
+    (
+      "name" :=: text,
+      "email" :=: nullable[text]
+    )
+  ]
+
+  class metadataType extends udt[
+    Metadata,
+    "music",    // keyspace
+    "metadata", // udt name
+    (
+      "createdAt" :=: timestamp,
+      "updatedAt" :=: nullable[timestamp],
+      "author" :=: userType   // nested udt
+    )
+  ]
 
   object events extends Table[
     "music",
@@ -35,8 +54,8 @@ object Music:
       "venue" :=: text,
       "start_time" :=: timestamp,
       "artists" :=: list[varchar],
-      "prices" :=: map[currency, decimal],
+      "tickets" :=: map[currency, decimal],
       "tags" :=: set[varchar],
-      "metadata" :=: json[Metadata]
+      "metadata" :=: metadataType
     )
   ]

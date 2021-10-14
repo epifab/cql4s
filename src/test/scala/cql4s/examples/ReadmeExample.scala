@@ -1,33 +1,11 @@
-# CQL4s
+import cats.effect.{ExitCode, IO, IOApp}
+import cql4s.*
 
-[![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://app.travis-ci.com/epifab/cql4s)
-
-CQL4s is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
-built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
-
-
-## Why CQL4s
-
-CQL4s brings Cassandra to the wonderful world of functional Scala through cats effect and fs2.
-
-Thanks to its strongly typed DSL, it also helps to prevent common mistakes **at compile time**, such as 
-typos (referring to a non-existing table or column),
-comparing fields of unrelated types, 
-decoding the results of a query into an incompatible data structure,
-issues with placeholder encoding for queries and commands.
-
-CQL4s was strongly inspired by [Tydal](https://github.com/epifab/tydal3).
-
-
-
-## Usage example
-
-#### The model
-
-```scala
 import java.time.Instant
 import java.util.{Currency, UUID}
 
+
+// The model
 case class User(name: String, email: Option[String])
 
 case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
@@ -41,31 +19,16 @@ case class Event(
   tags: Set[String],
   metadata: Metadata
 )
-```
 
-#### The schema
-
-Including all tables, user defined types and custom types modelled on top of existing ones.
-
-```scala
-import cql4s.*
-
-import java.util.Currency
-
-// ------------
-// Custom types
-// ------------
-
+// Build a new type based on a primitive type
 trait currencyType
 
 object currencyType:
-  given DataTypeCodec[currencyType, String, Currency] = 
+  given DataTypeCodec[currencyType, String, Currency] =
     DataType.textCodec.map(_.getCurrencyCode, Currency.getInstance)
 
 
-// ------------------
 // User defined types
-// ------------------
 
 class userType extends udt[
   User,
@@ -88,10 +51,6 @@ class metadataType extends udt[
   )
 ]
 
-// ------
-// Tables
-// ------
-
 object events extends Table[
   "music",  // keyspace
   "events", // table name
@@ -105,18 +64,6 @@ object events extends Table[
     "metadata" :=: metadataType
   )
 ]
-```
-
-#### Queries and commands
-
-Typically, you might want to extract away all your queries and commands.
-
-```scala
-import cats.effect.IO
-import cql4s.*
-import fs2.Stream
-
-import java.util.{Currency, UUID}
 
 class EventsRepo(cassandra: CassandraRuntime):
   private val insert: Command[Event] =
@@ -138,22 +85,16 @@ class EventsRepo(cassandra: CassandraRuntime):
       .where(_("id") === :?)
       .compile
       .pmap[Event]
-  
-  def findById(id: UUID): Stream[IO, Event] =
+
+  def findById(id: UUID): fs2.Stream[IO, Event] =
     cassandra.execute(select)(id)
-  
+
   def add(event: Event): IO[Unit] =
     cassandra.execute(insert)(event)
-  
+
   def updateTickets(id: UUID, tickets: Map[Currency, BigDecimal], metadata: Metadata) =
     cassandra.execute(update)((tickets, metadata, id))
-```
 
-#### The app
-
-```scala
-import cats.effect.{ExitCode, IO, IOApp}
-import cql4s.{CassandraConfig, CassandraRuntime}
 
 object Program extends IOApp:
   val cassandraConfig = CassandraConfig(
@@ -168,38 +109,18 @@ object Program extends IOApp:
     CassandraRuntime(cassandraConfig).map(new EventsRepo(_)).use { repo =>
       repo
         .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
-        // Update existing event tickets
+        // Update existing event price
         .evalTap(e => repo.updateTickets(
           id = e.id,
           tickets = Map(Currency.getInstance("GBP") -> 49.99),
           metadata = e.metadata.copy(updatedAt = Some(Instant.now))
-        )) 
+        ))
         // Create a new event with same artists on a different day
         .evalTap(e => repo.add(e.copy(
-          startTime = Instant.parse("2022-03-08T20:30:00Z"), 
+          startTime = Instant.parse("2022-03-08T20:30:00Z"),
           metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
         )))
         .compile
         .drain
         .as(ExitCode.Success)
     }
-```
-
-## Support
-
-Find out all supported feature [here](SUPPORT.md).
-
-
-## Testing
-
-```shell
-$ docker-compose up -d
-$ sbt test
-```
-
-
-## Getting started
-
-### Installation (sbt)
-
-Coming soon

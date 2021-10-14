@@ -2,7 +2,7 @@ package cql4s.examples
 
 import cats.effect.{ExitCode, IO, IOApp}
 import cql4s.*
-import cql4s.keyspaces.Music.{Event, Metadata, events}
+import cql4s.keyspaces.Music.{Event, Metadata, User, events}
 
 import java.time.Instant
 import java.util.{Currency, UUID}
@@ -11,7 +11,7 @@ import scala.concurrent.duration.*
 trait EventRepo:
   def findEventsByVenue(venue: String): fs2.Stream[IO, Event]
   def addEvent(event: Event): IO[Unit]
-  def updateEventPrice(eventId: UUID, prices: Map[Currency, BigDecimal]): IO[Unit]
+  def updateEventPrice(eventId: UUID, tickets: Map[Currency, BigDecimal]): IO[Unit]
 
 
 val GBP = Currency.getInstance("GBP")
@@ -36,14 +36,14 @@ object EventRepo:
 
   private val update: Command[(Map[Currency, BigDecimal], UUID)] =
     Update(events)
-      .set(_("prices"))
+      .set(_("tickets"))
       .where(_("id") === :?)
       .compile
 
   def apply(cassandra: CassandraRuntime): EventRepo = new EventRepo:
     override def findEventsByVenue(venue: String): fs2.Stream[IO, Event] = cassandra.execute(select)(venue)
     override def addEvent(event: Event): IO[Unit] = cassandra.execute(insert)(event)
-    override def updateEventPrice(id: UUID, prices: Map[Currency, BigDecimal]): IO[Unit] = cassandra.execute(update)((prices, id))
+    override def updateEventPrice(id: UUID, tickets: Map[Currency, BigDecimal]): IO[Unit] = cassandra.execute(update)((tickets, id))
 
 
 object DoubleTicketsPriceProgram extends IOApp:
@@ -62,12 +62,12 @@ object DoubleTicketsPriceProgram extends IOApp:
         startTime = Instant.parse(date),
         artists = List("Radiohead", "Sigur Ros"),
         venue = venue,
-        prices = Map(GBP -> 49.99, USD -> 79.99),
+        tickets = Map(GBP -> 49.99, USD -> 79.99),
         tags = Set("rock", "post rock", "indie"),
         metadata = Metadata(
           createdAt = Instant.now,
           updatedAt = None,
-          author = "epifab"
+          author = User("epifab", Some("info@epifab.solutions"))
         )
       )
     }
@@ -83,7 +83,7 @@ object DoubleTicketsPriceProgram extends IOApp:
           _ <- fs2.Stream.awakeEvery[IO](10.seconds)
           _ <- repo.findEventsByVenue("Roundhouse")
             .evalTap(e => IO(println("About to double the price for: ")) *> IO(println(e)))
-            .evalTap(e => repo.updateEventPrice(e.id, e.prices.map { case (currency, price) => currency -> price * 2 }))
+            .evalTap(e => repo.updateEventPrice(e.id, e.tickets.map { case (currency, price) => currency -> price * 2 }))
         } yield ()).compile.drain
       }
       .as(ExitCode.Success)
