@@ -13,4 +13,4 @@ trait CassandraAware:
     datacenter = "testdc"
   )
 
-  protected val cassandraRuntime: Resource[IO, CassandraRuntime] = CassandraRuntime(config)
+  protected val cassandraRuntime: Resource[IO, CassandraRuntime[IO]] = CassandraRuntime[IO](config)

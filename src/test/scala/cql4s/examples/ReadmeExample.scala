@@ -65,7 +65,7 @@ object events extends Table[
   )
 ]
 
-class EventsRepo(cassandra: CassandraRuntime):
+class EventsRepo[F[_]](cassandra: CassandraRuntime[F]):
   private val insert: Command[Event] =
     Insert
       .into(events)
@@ -86,13 +86,13 @@ class EventsRepo(cassandra: CassandraRuntime):
       .compile
       .pmap[Event]
 
-  def findById(id: UUID): fs2.Stream[IO, Event] =
+  def findById(id: UUID): fs2.Stream[F, Event] =
     cassandra.execute(select)(id)
 
-  def add(event: Event): IO[Unit] =
+  def add(event: Event): F[Unit] =
     cassandra.execute(insert)(event)
 
-  def updateTickets(id: UUID, tickets: Map[Currency, BigDecimal], metadata: Metadata) =
+  def updateTickets(id: UUID, tickets: Map[Currency, BigDecimal], metadata: Metadata): F[Unit] =
     cassandra.execute(update)((tickets, metadata, id))
 
 
@@ -106,7 +106,7 @@ object Program extends IOApp:
   )
 
   def run(args: List[String]): IO[ExitCode] =
-    CassandraRuntime(cassandraConfig).map(new EventsRepo(_)).use { repo =>
+    CassandraRuntime[IO](cassandraConfig).map(new EventsRepo(_)).use { repo =>
       repo
         .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
         // Update existing event price
@@ -117,6 +117,7 @@ object Program extends IOApp:
         ))
         // Create a new event with same artists on a different day
         .evalTap(e => repo.add(e.copy(
+          id = UUID.randomUUID(),
           startTime = Instant.parse("2022-03-08T20:30:00Z"),
           metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
         )))

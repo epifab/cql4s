@@ -1,7 +1,7 @@
 package cql4s
 
-import cats.effect.IO
-import cats.effect.kernel.Resource
+import cats.Applicative.ops.toAllApplicativeOps
+import cats.effect.kernel.{Resource, Sync}
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.*
 import com.datastax.oss.driver.api.core.session.Session
@@ -23,42 +23,42 @@ case class CassandraConfig(
   datacenter: String
 )
 
-class CassandraRuntime(protected val session: CqlSession):
+class CassandraRuntime[F[_]: Sync](protected val session: CqlSession):
   @tailrec
   private def buildStatement(statement: SimpleStatementBuilder, encoded: List[Any]): SimpleStatementBuilder =
     encoded match
       case Nil => statement
       case head :: tail => buildStatement(statement.addPositionalValue(head), tail)
 
-  def execute(cql: String, params: List[Any]): IO[ResultSet] =
+  def execute(cql: String, params: List[Any]): F[ResultSet] =
     val statement = buildStatement(new SimpleStatementBuilder(cql), params).build()
-    IO.blocking(session.execute(statement))
+    Sync[F].blocking(session.execute(statement))
 
-  def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[IO, Output] =
+  def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[F, Output] =
     (input: Input) =>
       for {
         resultSet <- fs2.Stream.eval(execute(query.cql, query.encoder.encode(input)))
-        row <- fs2.Stream.eval(IO(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
+        row <- fs2.Stream.eval(Sync[F].blocking(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
 
-  def execute[Input](command: Command[Input]): Input => IO[Unit] =
+  def execute[Input](command: Command[Input]): Input => F[Unit] =
     (input: Input) =>
       execute(command.cql, command.encoder.encode(input)).void
 
-  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => IO[Unit] =
+  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => F[Unit] =
     (rows: Iterable[Input]) =>
       val statement: BatchStatement = 
         rows
           .map(placeholders => buildStatement(new SimpleStatementBuilder(command.cql), command.encoder.encode(placeholders)).build())
           .foldLeft(new BatchStatementBuilder(batchType)) { case (batch, statement) => batch.addStatement(statement) }
           .build()
-      IO.blocking(session.execute(statement)).void
+      Sync[F].blocking(session.execute(statement)).void
 
 
 object CassandraRuntime:
-  def apply(config: CassandraConfig): Resource[IO, CassandraRuntime] =
+  def apply[F[_]: Sync](config: CassandraConfig): Resource[F, CassandraRuntime[F]] =
     Resource.make(
-      IO.blocking(
+      Sync[F].blocking(
         CqlSession
           .builder()
           .addContactPoint(new InetSocketAddress(config.host, config.port))
@@ -67,4 +67,4 @@ object CassandraRuntime:
           .pipe { builder => config.keyspace.fold(builder)(keyspace => builder.withKeyspace(keyspace)) }
           .build()
       ).map(new CassandraRuntime(_))
-    )(runtime => IO(runtime.session.close()))
+    )(runtime => Sync[F].blocking(runtime.session.close()))

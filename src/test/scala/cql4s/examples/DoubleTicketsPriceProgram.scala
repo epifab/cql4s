@@ -8,10 +8,10 @@ import java.time.Instant
 import java.util.{Currency, UUID}
 import scala.concurrent.duration.*
 
-trait EventRepo:
-  def findEventsByVenue(venue: String): fs2.Stream[IO, Event]
-  def addEvent(event: Event): IO[Unit]
-  def updateEventPrice(eventId: UUID, tickets: Map[Currency, BigDecimal]): IO[Unit]
+trait EventRepo[F[_]]:
+  def findEventsByVenue(venue: String): fs2.Stream[F, Event]
+  def addEvent(event: Event): F[Unit]
+  def updateEventPrice(eventId: UUID, tickets: Map[Currency, BigDecimal]): F[Unit]
 
 
 val GBP = Currency.getInstance("GBP")
@@ -40,10 +40,15 @@ object EventRepo:
       .where(_("id") === :?)
       .compile
 
-  def apply(cassandra: CassandraRuntime): EventRepo = new EventRepo:
-    override def findEventsByVenue(venue: String): fs2.Stream[IO, Event] = cassandra.execute(select)(venue)
-    override def addEvent(event: Event): IO[Unit] = cassandra.execute(insert)(event)
-    override def updateEventPrice(id: UUID, tickets: Map[Currency, BigDecimal]): IO[Unit] = cassandra.execute(update)((tickets, id))
+  def apply[F[_]](cassandra: CassandraRuntime[F]): EventRepo[F] = new EventRepo:
+    override def findEventsByVenue(venue: String): fs2.Stream[F, Event] =
+      cassandra.execute(select)(venue)
+
+    override def addEvent(event: Event): F[Unit] =
+      cassandra.execute(insert)(event)
+
+    override def updateEventPrice(id: UUID, tickets: Map[Currency, BigDecimal]): F[Unit] =
+      cassandra.execute(update)((tickets, id))
 
 
 object DoubleTicketsPriceProgram extends IOApp:
@@ -72,7 +77,7 @@ object DoubleTicketsPriceProgram extends IOApp:
       )
     }
 
-    CassandraRuntime(cassandraConfig).map(EventRepo.apply)
+    CassandraRuntime[IO](cassandraConfig).map(EventRepo.apply)
       .use { repo =>
         (for {
           // Create event
