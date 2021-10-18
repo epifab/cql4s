@@ -118,36 +118,32 @@ import cql4s.*
 import fs2.Stream
 
 import java.util.{Currency, UUID}
+import scala.util.chaining.*
 
-class EventsRepo[F[_]](cassandra: CassandraRuntime[F]):
-  private val insert: Command[Event] =
+class EventsRepo[F[_]](using cassandra: CassandraRuntime[F]):
+  val add: Event => F[Unit] =
     Insert
       .into(events)
       .compile
       .pcontramap[Event]
+      .run
 
-  private val update: Command[(Map[Currency, BigDecimal], Metadata, UUID)] =
+  val updateTickets: (Map[Currency, BigDecimal], Metadata, UUID) => F[Unit] =
     Update(events)
       .set(e => (e("tickets"), e("metadata")))
       .where(_("id") === :?)
       .compile
+      .run
+      .pipe(Function.untupled)
 
-  private val select: Query[UUID, Event] =
+  val findById: UUID => Stream[F, Event] =
     Select
       .from(events)
       .take(_.*)
       .where(_("id") === :?)
       .compile
       .pmap[Event]
-  
-  def findById(id: UUID): Stream[F, Event] =
-    cassandra.execute(select)(id)
-  
-  def add(event: Event): F[Unit] =
-    cassandra.execute(insert)(event)
-  
-  def updateTickets(id: UUID, tickets: Map[Currency, BigDecimal], metadata: Metadata): F[Unit] =
-    cassandra.execute(update)((tickets, metadata, id))
+      .run
 ```
 
 #### The app
@@ -166,25 +162,27 @@ object Program extends IOApp:
   )
 
   def run(args: List[String]): IO[ExitCode] =
-    CassandraRuntime[IO](cassandraConfig).map(new EventsRepo(_)).use { repo =>
-      repo
-        .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
-        // Update existing event tickets
-        .evalTap(e => repo.updateTickets(
-          id = e.id,
-          tickets = Map(Currency.getInstance("GBP") -> 49.99),
-          metadata = e.metadata.copy(updatedAt = Some(Instant.now))
-        )) 
-        // Create a new event with same artists on a different day
-        .evalTap(e => repo.add(e.copy(
-          id = UUID.randomUuid(),
-          startTime = Instant.parse("2022-03-08T20:30:00Z"), 
-          metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
-        )))
-        .compile
-        .drain
-        .as(ExitCode.Success)
-    }
+    CassandraRuntime[IO](cassandraConfig)
+      .map(cassandra => new EventsRepo(using cassandra))
+      .use { repo =>
+        repo
+          .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
+          // Update existing event tickets
+          .evalTap(e => repo.updateTickets(
+            Map(Currency.getInstance("GBP") -> 49.99),
+            e.metadata.copy(updatedAt = Some(Instant.now)),
+            e.id
+          ))
+          // Create a new event with same artists on a different day
+          .evalTap(e => repo.add(e.copy(
+            id = UUID.randomUuid(),
+            startTime = Instant.parse("2022-03-08T20:30:00Z"), 
+            metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
+          )))
+          .compile
+          .drain
+          .as(ExitCode.Success)
+      }
 ```
 
 ## Support

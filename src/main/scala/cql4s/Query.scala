@@ -14,3 +14,5 @@ class Query[Input, Output](val cql: String, val encoder: Encoder[Input], val dec
   def pcontramap[P <: Product](using m: Mirror.ProductOf[P], i: m.MirroredElemTypes =:= Input): Query[P, Output] =
     contramap(p => i(Tuple.fromProductTyped(p)))
 
+  def run[F[_]](using cassandra: CassandraRuntime[F]): Input => fs2.Stream[F, Output] =
+    cassandra.execute(this)

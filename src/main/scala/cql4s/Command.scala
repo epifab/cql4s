@@ -8,3 +8,6 @@ class Command[Input](val cql: String, val encoder: Encoder[Input]):
 
   def pcontramap[P <: Product](using m: Mirror.ProductOf[P], i: m.MirroredElemTypes =:= Input): Command[P] =
     contramap(p => i(Tuple.fromProductTyped(p)))
+
+  def run[F[_]](using cassandra: CassandraRuntime[F]): Input => F[Unit] =
+    cassandra.execute(this)

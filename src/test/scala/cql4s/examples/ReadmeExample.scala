@@ -3,6 +3,7 @@ import cql4s.*
 
 import java.time.Instant
 import java.util.{Currency, UUID}
+import scala.util.chaining.*
 
 
 // The model
@@ -65,35 +66,30 @@ object events extends Table[
   )
 ]
 
-class EventsRepo[F[_]](cassandra: CassandraRuntime[F]):
-  private val insert: Command[Event] =
+class EventsRepo[F[_]](using cassandra: CassandraRuntime[F]):
+  val add: Event => F[Unit] =
     Insert
       .into(events)
       .compile
       .pcontramap[Event]
+      .run
 
-  private val update: Command[(Map[Currency, BigDecimal], Metadata, UUID)] =
+  val updateTickets: (Map[Currency, BigDecimal], Metadata, UUID) => F[Unit] =
     Update(events)
       .set(e => (e("tickets"), e("metadata")))
       .where(_("id") === :?)
       .compile
+      .run
+      .pipe(Function.untupled)
 
-  private val select: Query[UUID, Event] =
+  val findById: UUID => fs2.Stream[F, Event] =
     Select
       .from(events)
       .take(_.*)
       .where(_("id") === :?)
       .compile
       .pmap[Event]
-
-  def findById(id: UUID): fs2.Stream[F, Event] =
-    cassandra.execute(select)(id)
-
-  def add(event: Event): F[Unit] =
-    cassandra.execute(insert)(event)
-
-  def updateTickets(id: UUID, tickets: Map[Currency, BigDecimal], metadata: Metadata): F[Unit] =
-    cassandra.execute(update)((tickets, metadata, id))
+      .run
 
 
 object Program extends IOApp:
@@ -106,14 +102,14 @@ object Program extends IOApp:
   )
 
   def run(args: List[String]): IO[ExitCode] =
-    CassandraRuntime[IO](cassandraConfig).map(new EventsRepo(_)).use { repo =>
+    CassandraRuntime[IO](cassandraConfig).map(cassandra => new EventsRepo(using cassandra)).use { repo =>
       repo
         .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
         // Update existing event price
         .evalTap(e => repo.updateTickets(
-          id = e.id,
-          tickets = Map(Currency.getInstance("GBP") -> 49.99),
-          metadata = e.metadata.copy(updatedAt = Some(Instant.now))
+          Map(Currency.getInstance("GBP") -> 49.99),
+          e.metadata.copy(updatedAt = Some(Instant.now)),
+          e.id
         ))
         // Create a new event with same artists on a different day
         .evalTap(e => repo.add(e.copy(
