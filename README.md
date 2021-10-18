@@ -50,7 +50,7 @@ case class Event(
 The schema includes all tables, user defined types and custom types modelled on top of existing ones.
 
 ```scala
-import cql4s.*
+import cql4s.dsl.*
 
 import java.util.Currency
 
@@ -114,13 +114,13 @@ object events extends Table[
 Typically, you might want to extract away all your queries and commands.
 
 ```scala
-import cql4s.*
-import fs2.Stream
+import cql4s.dsl.*
+import cql4s.Runtime
 
 import java.util.{Currency, UUID}
 import scala.util.chaining.*
 
-class EventsRepo[F[_]](using cassandra: CassandraRuntime[F]):
+class EventsRepo[F[_], S[_]](using cassandra: Runtime[F, S]):
   val add: Event => F[Unit] =
     Insert
       .into(events)
@@ -136,7 +136,7 @@ class EventsRepo[F[_]](using cassandra: CassandraRuntime[F]):
       .run
       .pipe(Function.untupled)
 
-  val findById: UUID => Stream[F, Event] =
+  val findById: UUID => S[Event] =
     Select
       .from(events)
       .take(_.*)
@@ -148,9 +148,14 @@ class EventsRepo[F[_]](using cassandra: CassandraRuntime[F]):
 
 #### The app
 
+Following, is an example of an application running on the typelevel stack.
+
 ```scala
 import cats.effect.{ExitCode, IO, IOApp}
-import cql4s.{CassandraConfig, CassandraRuntime}
+import cql4s.{CassandraCatsRuntime, CassandraConfig}
+
+import java.time.Instant
+import java.util.{Currency, UUID}
 
 object Program extends IOApp:
   val cassandraConfig = CassandraConfig(
@@ -160,9 +165,9 @@ object Program extends IOApp:
     keyspace = None,
     datacenter = "testdc"
   )
-
+  
   def run(args: List[String]): IO[ExitCode] =
-    CassandraRuntime[IO](cassandraConfig)
+    CassandraRuntimeTypelevel[IO](cassandraConfig)
       .map(cassandra => new EventsRepo(using cassandra))
       .use { repo =>
         repo
@@ -176,7 +181,7 @@ object Program extends IOApp:
           // Create a new event with same artists on a different day
           .evalTap(e => repo.add(e.copy(
             id = UUID.randomUuid(),
-            startTime = Instant.parse("2022-03-08T20:30:00Z"), 
+            startTime = Instant.parse("2022-03-08T20:30:00Z"),
             metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
           )))
           .compile
