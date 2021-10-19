@@ -22,20 +22,18 @@ val commonDependencies = Seq(
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 )
 
-lazy val core =
+lazy val `cql4s-core` =
   project
-    .in(file("core"))
+    .in(file("cql4s-core"))
     .settings(
-      name := "cql4s-core",
       libraryDependencies ++= commonDependencies
     )
 
-lazy val circe =
+lazy val `cql4s-circe` =
   project
-    .in(file("circe"))
-    .dependsOn(core)
+    .in(file("cql4s-circe"))
+    .dependsOn(`cql4s-core`)
     .settings(
-      name := "cql4s-core",
       libraryDependencies ++= commonDependencies ++ Seq(
         "io.circe"         %% "circe-core"    % circeVersion,
         "io.circe"         %% "circe-generic" % circeVersion,
@@ -43,12 +41,11 @@ lazy val circe =
       )
     )
 
-lazy val cats =
+lazy val `cql4s-cats` =
   project
-    .in(file("cats"))
-    .dependsOn(core % "compile->compile;test->test")
+    .in(file("cql4s-cats"))
+    .dependsOn(`cql4s-core` % "compile->compile;test->test")
     .settings(
-      name := "cql4s-cats",
       libraryDependencies ++= Seq(
         "co.fs2"           %% "fs2-core"      % fs2Version,
         "co.fs2"           %% "fs2-io"        % fs2Version,
@@ -57,12 +54,11 @@ lazy val cats =
       ) ++ commonDependencies
     )
 
-lazy val zio =
+lazy val `cql4s-zio` =
   project
-    .in(file("zio"))
-    .dependsOn(core % "compile->compile;test->test")
+    .in(file("cql4s-zio"))
+    .dependsOn(`cql4s-core` % "compile->compile;test->test")
     .settings(
-      name := "cql4s-zio",
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio"         % zioVersion,
         "dev.zio" %% "zio-streams" % zioVersion
