@@ -200,7 +200,30 @@ Find out all supported feature [here](SUPPORT.md).
 
 ### Installation (sbt)
 
-Coming soon
+#### Step 1. Add the JitPack repository to your build file
+
+    resolvers += "jitpack" at "https://jitpack.io"
+
+
+#### Step 2. Add the dependencies
+
+For the typelevel stack:
+
+```scala
+libraryDependencies ++= Seq(
+    "com.github.epifab.cql4s" %% "cql4s-core",
+    "com.github.epifab.cql4s" %% "cql4s-cats",
+).map(_ % Version)
+```
+
+For ZIO:
+
+```scala
+libraryDependencies ++= Seq(
+    "com.github.epifab.cql4s" %% "cql4s-core",
+    "com.github.epifab.cql4s" %% "cql4s-zio",
+).map(_ % Version)
+```
 
 
 ## Testing
