@@ -2,15 +2,16 @@
 
 [![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://app.travis-ci.com/epifab/cql4s)
 
-CQL4s is a typesafe CQL (Cassandra Query Language) DSL for *Scala 3*, cats effect and fs2 
-built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
+CQL4s is a typesafe CQL DSL and Cassandra client for *Scala 3*.
 
 
 ## Why CQL4s
 
-CQL4s brings Cassandra to the wonderful world of functional Scala through cats effect and fs2.
+CQL4s brings Cassandra to the wonderful world of functional Scala,
+by supporting out of the box [cats effect](https://typelevel.org/cats-effect) / [fs2](https://fs2.io/)
+and [ZIO](https://zio.dev/).
 
-Thanks to its strongly typed DSL, it also helps to prevent common mistakes **at compile time**, such as 
+Thanks to its strongly typed DSL, it helps to prevent common mistakes **at compile time**, such as 
 typos (referring to a non-existing table or column),
 comparing fields of unrelated types, 
 decoding the results of a query into an incompatible data structure,
@@ -195,6 +196,13 @@ object Program extends IOApp:
 Find out all supported feature [here](SUPPORT.md).
 
 
+## Getting started
+
+### Installation (sbt)
+
+Coming soon
+
+
 ## Testing
 
 ```shell
@@ -203,8 +211,6 @@ $ sbt test
 ```
 
 
-## Getting started
+## Dependencies
 
-### Installation (sbt)
-
-Coming soon
+CQL4s is built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).
