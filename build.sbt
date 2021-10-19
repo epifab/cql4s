@@ -53,7 +53,7 @@ lazy val circe =
 lazy val cats =
   project
     .in(file("cats"))
-    .dependsOn(core)
+    .dependsOn(core % "compile->compile;test->test")
     .settings(
       name := "cql4s-cats",
       version := "0.1.0",
@@ -73,7 +73,7 @@ lazy val cats =
 lazy val zio =
   project
     .in(file("zio"))
-    .dependsOn(core)
+    .dependsOn(core % "compile->compile;test->test")
     .settings(
       name := "cql4s-zio",
       version := "0.1.0",

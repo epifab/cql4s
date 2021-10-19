@@ -1,30 +1,17 @@
-package cql4s.keyspaces
+package cql4s.test
 
 import cql4s.dsl.*
+import cql4s.test.model.*
 
 import java.time.Instant
 import java.util.{Currency, UUID}
 
-
-object Music:
+object schema:
   trait currency
 
   object currency:
     given currencyDataType: DataTypeCodec[currency, String, Currency] =
       DataType.textCodec.map[currency, Currency](_.getCurrencyCode, Currency.getInstance)
-
-  case class User(name: String, email: Option[String])
-  case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
-
-  case class Event(
-    id: UUID,
-    venue: String,
-    startTime: Instant,
-    artists: List[String],
-    tickets: Map[Currency, BigDecimal],
-    tags: Set[String],
-    metadata: Metadata
-  )
 
   class userType extends udt[
     User,

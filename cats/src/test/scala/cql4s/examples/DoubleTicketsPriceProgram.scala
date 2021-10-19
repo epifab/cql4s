@@ -1,9 +1,10 @@
 package cql4s.examples
 
 import cats.effect.{ExitCode, IO, IOApp}
-import cql4s.{CassandraConfig, CassandraCatsRuntime}
 import cql4s.dsl.*
-import cql4s.keyspaces.Music.{Event, Metadata, User, events}
+import cql4s.test.model.*
+import cql4s.test.schema.*
+import cql4s.{CassandraCatsRuntime, CassandraConfig}
 
 import java.time.Instant
 import java.util.{Currency, UUID}
