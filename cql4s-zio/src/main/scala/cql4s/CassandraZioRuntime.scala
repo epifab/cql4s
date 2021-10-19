@@ -8,7 +8,7 @@ import zio.{URIO, ZIO}
 import zio.stream.ZStream
 
 class CassandraZioRuntime(protected val session: CqlSession) extends CassandraRuntime[[A] =>> ZIO[Any, Throwable, A], [A] =>> ZStream[Any, Throwable, A]]:
-  def execute(cql: String, params: List[Any]): ZIO[Any, Throwable, ResultSet] =
+  private def execute(cql: String, params: List[Any]): ZIO[Any, Throwable, ResultSet] =
     val statement = statementBuilder(new SimpleStatementBuilder(cql), params).build()
     ZIO.blocking(ZIO(session.execute(statement)))
 

@@ -8,7 +8,7 @@ import cql4s.dsl.*
 import cql4s.{CassandraConfig, CassandraRuntime}
 
 class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extends CassandraRuntime[F, [A] =>> fs2.Stream[F, A]]:
-  def execute(cql: String, params: List[Any]): F[ResultSet] =
+  private def execute(cql: String, params: List[Any]): F[ResultSet] =
     val statement = statementBuilder(new SimpleStatementBuilder(cql), params).build()
     Sync[F].blocking(session.execute(statement))
 

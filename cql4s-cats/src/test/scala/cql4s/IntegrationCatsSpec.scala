@@ -22,7 +22,7 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
   "Can insert / retrieve data" in {
     val result: IO[Option[Event]] = cassandraRuntime.use(cassandra =>
       for {
-        _ <- cassandra.execute("TRUNCATE music.events", List.empty)
+        _ <- cassandra.execute(truncateEvents)(())
         _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
         _ <- cassandra.execute(findEventById)(event1.id).evalTap(e => cassandra.execute(updateEventTickets)((
           Map(Currency.getInstance("USD") -> 32),

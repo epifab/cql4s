@@ -8,6 +8,10 @@ import java.util.{Currency, UUID}
 import scala.concurrent.duration.DurationInt
 
 object queries:
+
+  val truncateEvents: Command[Unit] =
+    Truncate(events).compile
+
   val insertEvent: Command[Event] =
     Insert
       .into(events)

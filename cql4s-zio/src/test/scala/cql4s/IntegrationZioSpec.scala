@@ -21,7 +21,7 @@ class IntegrationZioSpec extends AnyFreeSpec with Matchers:
   "Can insert / retrieve data" in {
     val result: ZIO[Any, Throwable, Option[Event]] = cassandraRuntime(cassandra =>
       for {
-        _ <- cassandra.execute("TRUNCATE music.events", List.empty)
+        _ <- cassandra.execute(truncateEvents)(())
         _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
         _ <- cassandra.execute(findEventById)(event1.id).tap(e => cassandra.execute(updateEventTickets)((
           Map(Currency.getInstance("USD") -> 32),

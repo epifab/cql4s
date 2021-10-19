@@ -43,4 +43,4 @@
 - Insert (missing support for `IF NOT EXISTS`)
 - Update (missing support for `IF EXISTS`)
 - Delete not supported yet
-- Truncate not supported yet
+- Truncate

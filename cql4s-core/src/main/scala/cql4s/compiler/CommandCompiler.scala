@@ -40,6 +40,11 @@ object CommandFragment:
         keyValues.build(command.keyValues, ", ").prepend("SET ") ++
         where.build(command.where).prepend("WHERE ")
 
+  given truncate[Keyspace, TableName, TableColumns]: CommandFragment[Truncate[Keyspace, TableName, TableColumns], EmptyTuple] with
+    def build(command: Truncate[Keyspace, TableName, TableColumns]): CompiledFragment[EmptyTuple] =
+      CompiledFragment(s"TRUNCATE ${command.table.keyspace.escaped}.${command.table.name.escaped}")
+
+
 object CommandCompiler:
   given [C, I <: Tuple, Input](
     using
