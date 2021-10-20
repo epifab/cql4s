@@ -10,27 +10,35 @@ trait QueryCompiler[-Q, Input, Output]:
 trait QueryFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
 
 object QueryFragment:
-  given select[Keyspace, TableName, TableColumns, Columns, Output, Where <: LogicalExpr, GroupBy, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple] (
+  given select[Keyspace, TableName, TableColumns, Columns, Output, Where <: LogicalExpr, GroupBy, OrderBy, Limit, PerPartitionLimit, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple, I4 <: Tuple, I5 <: Tuple, I6 <: Tuple] (
     using
     fields: ListFragment[FieldFragment, Columns, I1],
     where: LogicalExprFragment[Where, I2],
-    groupBy: ListFragment[FieldFragment, GroupBy, I3]
-  ): QueryFragment[Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy], I1 Concat I2 Concat I3] with
-    def build(select: Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy]): CompiledFragment[I1 Concat I2 Concat I3] =
+    groupBy: ListFragment[FieldFragment, GroupBy, I3],
+    orderBy: ListFragment[OrderByFragment, OrderBy, I4],
+    limit: OptionalInputFragment[Limit, I5],
+    perPartitionLimit: OptionalInputFragment[PerPartitionLimit, I6]
+  ): QueryFragment[Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy, OrderBy, Limit, PerPartitionLimit], I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] with
+    def build(select: Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy, OrderBy, Limit, PerPartitionLimit]): CompiledFragment[I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] =
       fields
         .build(select.fields, ", ")
+        .orElse("1")
         .wrap("SELECT ", s" FROM ${select.table.keyspace.escaped}.${select.table.name.escaped}") ++
         where.build(select.where).prepend("WHERE ") ++
         groupBy.build(select.groupBy, ", ").prepend("GROUP BY ") ++
+        orderBy.build(select.orderBy, ", ").prepend("ORDER BY ") ++
+        limit.build(select.limit).prepend("LIMIT ") ++
+        perPartitionLimit.build(select.perPartitionLimit).prepend("PER PARTITION LIMIT ") ++
         Option.when(select.allowFiltering)("ALLOW FILTERING")
 
 
 object QueryCompiler:
-  given [Fields, S <: Select[_, _, Fields, _, _, _], RawInput <: Tuple, Input, Output] (
+  given [Fields, S <: Select[_, _, Fields, _, _, _, _, _, _], RawInput <: Tuple, Input, Output] (
     using
-    fragment: QueryFragment[S, RawInput],
-    encoder: EncoderAdapter[RawInput, Input],
+    queryFragment: QueryFragment[S, RawInput],
+    encoder: EncoderFactory[RawInput, Input],
     decoder: DecoderAdapter[Fields, Output]
   ): QueryCompiler[S, Input, Output] with
     def build(select: S): Query[Input, Output] =
-      Query(fragment.build(select).cql, encoder, decoder)
+      val fragment = queryFragment.build(select)
+      Query(fragment.cql, encoder(fragment.input), decoder)

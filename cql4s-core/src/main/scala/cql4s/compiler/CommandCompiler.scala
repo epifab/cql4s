@@ -49,7 +49,8 @@ object CommandCompiler:
   given [C, I <: Tuple, Input](
     using
     commandFragment: CommandFragment[C, I],
-    encoder: EncoderAdapter[I, Input]
+    encoder: EncoderFactory[I, Input]
   ): CommandCompiler[C, Input] with
     def build(command: C): Command[Input] =
-      Command(commandFragment.build(command).cql, encoder)
+      val fragment = commandFragment.build(command)
+      Command(fragment.cql, encoder(fragment.input))

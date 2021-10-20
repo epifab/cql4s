@@ -20,3 +20,6 @@ trait Field[T]:
 
   def <=[G <: Field[_]](right: G)(using AreComparable[this.type, G]): LessThanOrEqual[this.type, G] = LessThanOrEqual(this, right)
   def <=(p: :?.type)(using AreComparable[this.type, Placeholder[T]]): LessThanOrEqual[this.type, Placeholder[T]] = LessThanOrEqual(this, Placeholder[T])
+
+  def asc: Asc[this.type] = Asc(this)
+  def desc: Desc[this.type] = Desc(this)

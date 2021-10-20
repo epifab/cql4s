@@ -1,8 +1,8 @@
 package cql4s.dsl
 
 object EncoderSpec:
-  EncoderAdapter(Placeholder[varchar])
+  EncoderFactory(Placeholder[varchar])
     .encode("yo")
 
-  EncoderAdapter((Placeholder[varchar], Placeholder[int]))
+  EncoderFactory((Placeholder[varchar], Placeholder[int]))
     .encode(("yo", 123))

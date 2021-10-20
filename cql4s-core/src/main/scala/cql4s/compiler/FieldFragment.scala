@@ -13,3 +13,7 @@ object FieldFragment:
   given placeholder[P <: Placeholder[_]]: FieldFragment[P, P *: EmptyTuple] with
     def build(placeholder: P): CompiledFragment[P *: EmptyTuple] = 
       CompiledFragment(List("?"), placeholder *: EmptyTuple)
+
+  given const[P <: Const[_]]: FieldFragment[P, P *: EmptyTuple] with
+    def build(const: P): CompiledFragment[P *: EmptyTuple] =
+      CompiledFragment(List("?"), const *: EmptyTuple)

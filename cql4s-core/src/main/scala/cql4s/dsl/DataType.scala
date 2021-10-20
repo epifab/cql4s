@@ -224,7 +224,7 @@ object DataType:
     name: DbIdentifier[Name],
     columnsFactory: ColumnsFactory[Components],
     decoderAdapter: DecoderAdapter[Components, Output],
-    encoderAdapter: EncoderAdapter[Components, Output]
+    encoderAdapter: EncoderFactory[Components, Output]
   ): DataType[untypedUdt[Keyspace, Name, Components]] with
     override type JavaType = UdtValue
     override type ScalaType = Output
@@ -239,7 +239,7 @@ object DataType:
     override val driverCodec: DriverTypeCodec[UdtValue] = DriverTypeCodecs.udtOf(driverDataType)
 
     override def decode: UdtValue => Output = decoderAdapter.decode
-    override def encode: Output => UdtValue = (output => encoderAdapter
+    override def encode: Output => UdtValue = (output => encoderAdapter(columnsFactory.value)
       .encode(output)
       .zip(columnsFactory.toList)
       .zipWithIndex
