@@ -20,7 +20,7 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
   implicit val ioRuntime: IORuntime = IORuntime.global
 
   "Can insert / retrieve data" in {
-    val result: IO[Option[Event]] = cassandraRuntime.use(cassandra =>
+    val result: IO[(Option[Event], Option[Event])] = cassandraRuntime.use(cassandra =>
       for {
         _ <- cassandra.execute(truncateEvents)(())
         _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
@@ -30,11 +30,16 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
           e.id
         ))).compile.drain
         updatedEvent <- cassandra.execute(findEventById)(event1.id).compile.last
-      } yield updatedEvent
+        _ <- cassandra.execute(deleteEvent)(event1.id)
+        deletedEvent <- cassandra.execute(findEventById)(event1.id).compile.last
+      } yield (updatedEvent, deletedEvent)
     )
 
-    result.unsafeRunSync() shouldBe Some(event1.copy(
-      tickets = Map(Currency.getInstance("USD") -> 32),
-      metadata = event1.metadata.copy(updatedAt = Some(now))
-    ))
+    result.unsafeRunSync() shouldBe (
+      Some(event1.copy(
+        tickets = Map(Currency.getInstance("USD") -> 32),
+        metadata = event1.metadata.copy(updatedAt = Some(now))
+      )),
+      None
+    )
   }

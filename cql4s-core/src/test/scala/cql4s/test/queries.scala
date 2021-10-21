@@ -25,6 +25,12 @@ object queries:
       .where(_("id") === :?)
       .compile
 
+  val deleteEvent: Command[UUID] =
+    Delete
+      .from(events)
+      .where(_("id") === :?)
+      .compile
+
   val findEventById: Query[UUID, Event] =
     Select
       .from(events)

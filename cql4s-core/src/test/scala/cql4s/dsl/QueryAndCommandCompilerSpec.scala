@@ -31,6 +31,11 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
       " WHERE id = ?"
   }
 
+  "Delete CQL" in {
+    deleteEvent.cql shouldBe "DELETE FROM music.events" +
+      " WHERE id = ?"
+  }
+
   "Select" - {
     val baseQuery = Select.from(events)
 

@@ -19,7 +19,7 @@ class IntegrationZioSpec extends AnyFreeSpec with Matchers:
   val ioRuntime = zio.Runtime.default
 
   "Can insert / retrieve data" in {
-    val result: ZIO[Any, Throwable, Option[Event]] = cassandraRuntime(cassandra =>
+    val result: ZIO[Any, Throwable, (Option[Event], Option[Event])] = cassandraRuntime(cassandra =>
       for {
         _ <- cassandra.execute(truncateEvents)(())
         _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
@@ -28,12 +28,17 @@ class IntegrationZioSpec extends AnyFreeSpec with Matchers:
           e.metadata.copy(updatedAt = Some(now)),
           e.id
         ))).run(ZSink.drain)
-        updatedEvents <- cassandra.execute(findEventById)(event1.id).run(ZSink.last[Event])
-      } yield updatedEvents
+        updatedEvent <- cassandra.execute(findEventById)(event1.id).run(ZSink.last[Event])
+        _ <- cassandra.execute(deleteEvent)(event1.id)
+        deletedEvent <- cassandra.execute(findEventById)(event1.id).run(ZSink.last[Event])
+      } yield (updatedEvent, deletedEvent)
     )
 
-    ioRuntime.unsafeRun(result) shouldBe Some(event1.copy(
-      tickets = Map(Currency.getInstance("USD") -> 32),
-      metadata = event1.metadata.copy(updatedAt = Some(now))
-    ))
+    ioRuntime.unsafeRun(result) shouldBe (
+      Some(event1.copy(
+        tickets = Map(Currency.getInstance("USD") -> 32),
+        metadata = event1.metadata.copy(updatedAt = Some(now))
+      )),
+      None
+    )
   }

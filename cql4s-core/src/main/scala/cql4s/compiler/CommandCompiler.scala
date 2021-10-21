@@ -17,7 +17,7 @@ object CommandFragment:
       case (None, None) => None
       case (a, b) => Some("USING " + (a.map("TTL " + _.toSeconds).toList ++ b.map(ts => "TIMESTAMP " + (ts.toEpochMilli * 1000))).mkString(" AND "))
 
-  given insert[Keyspace, TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple] (
+  given insert[Keyspace, TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple](
     using
     fields: ListFragment[KeyFragment, KeyValues, A],
     values: ListFragment[ValueFragment, KeyValues, B]
@@ -29,7 +29,7 @@ object CommandFragment:
         updateParameters(command.updateParameters)
     }
 
-  given update[Keyspace, TableName, TableColumns, KeyValues, Where <: LogicalExpr, A <: Tuple, B <: Tuple] (
+  given update[Keyspace, TableName, TableColumns, KeyValues, Where <: LogicalExpr, A <: Tuple, B <: Tuple](
     using
     keyValues: ListFragment[KeyValueFragment, KeyValues, A],
     where: LogicalExprFragment[Where, B]
@@ -38,6 +38,15 @@ object CommandFragment:
       CompiledFragment(s"UPDATE ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
         updateParameters(command.updateParameters) ++
         keyValues.build(command.keyValues, ", ").prepend("SET ") ++
+        where.build(command.where).prepend("WHERE ")
+
+  given delete[Keysapce, TableName, TableColumns, Where <: LogicalExpr, A <: Tuple](
+    using
+    where: LogicalExprFragment[Where, A]
+  ): CommandFragment[Delete[Keysapce, TableName, TableColumns, Where], A] with
+    def build(command: Delete[Keysapce, TableName, TableColumns, Where]): CompiledFragment[A] =
+      CompiledFragment(s"DELETE FROM ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
+        updateParameters(command.updateParameters) ++
         where.build(command.where).prepend("WHERE ")
 
   given truncate[Keyspace, TableName, TableColumns]: CommandFragment[Truncate[Keyspace, TableName, TableColumns], EmptyTuple] with
