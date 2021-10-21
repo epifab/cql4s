@@ -1,38 +1,34 @@
 package cql4s
 
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.cql.{BatchType, ResultSet, SimpleStatementBuilder}
+import com.datastax.oss.driver.api.core.cql.{BatchType, ResultSet, Statement}
 import cql4s.dsl.{Command, Query}
-import cql4s.{CassandraConfig, CassandraRuntime}
-import zio.{URIO, ZIO}
 import zio.stream.ZStream
+import zio.{Has, URIO, ZIO, ZLayer}
 
-class CassandraZioRuntime(protected val session: CqlSession) extends CassandraRuntime[[A] =>> ZIO[Any, Throwable, A], [A] =>> ZStream[Any, Throwable, A]]:
-  private def execute(cql: String, params: List[Any]): ZIO[Any, Throwable, ResultSet] =
-    val statement = statementBuilder(new SimpleStatementBuilder(cql), params).build()
-    ZIO.blocking(ZIO(session.execute(statement)))
+object CassandraZioRuntime extends CassandraRuntime[[A] =>> ZIO[Has[CqlSession], Throwable, A], [A] =>> ZStream[Has[CqlSession], Throwable, A]]:
+  private def execute[T <: Statement[T]](statement: Statement[T]): ZIO[Has[CqlSession], Throwable, ResultSet] =
+    for {
+      session <- ZIO.service[CqlSession]
+      resultSet <- ZIO.blocking(ZIO(session.execute(statement)))
+    } yield resultSet
 
-  def execute[Input, Output](query: Query[Input, Output]): Input => ZStream[Any, Throwable, Output] =
+  def execute[Input, Output](query: Query[Input, Output]): Input => ZStream[Has[CqlSession], Throwable, Output] =
     (input: Input) =>
       for {
-        resultSet <- ZStream.fromZIO(execute(query.cql, query.encoder.encode(input)))
+        resultSet <- ZStream.fromZIO(execute(CqlStatement(query)(input)))
         row <- ZStream.fromZIO(ZIO.blocking(ZIO(Option(resultSet.one())))).forever.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
 
-  def execute[Input](command: Command[Input]): Input => ZIO[Any, Throwable, Unit] =
+  def execute[Input](command: Command[Input]): Input => ZIO[Has[CqlSession], Throwable, Unit] =
     (input: Input) =>
-      execute(command.cql, command.encoder.encode(input)).map(_ => ())
+      execute(CqlStatement(command)(input)).map(_ => ())
 
-  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => ZIO[Any, Throwable, Unit] =
+  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => ZIO[Has[CqlSession], Throwable, Unit] =
     (rows: Iterable[Input]) =>
-      val statement = buildBatchStatement(batchType, command)(rows)
-      ZIO.blocking(ZIO(session.execute(statement))).map(_ => ())
+      execute(CqlStatement(batchType, command)(rows)).map(_ => ())
 
-
-object CassandraZioRuntime:
-  def apply(config: CassandraConfig): ZIO.Release[Any, Throwable, CassandraZioRuntime] =
-    ZIO.acquireReleaseWith(
-      ZIO.blocking(
-        ZIO(new CassandraZioRuntime(config.getSession()))
-      )
-    )(runtime => URIO(runtime.session.close()))
+  def apply(config: CassandraConfig): ZLayer[Any, Throwable, Has[CqlSession]] = {
+    val acquire = ZIO.blocking(ZIO(config.getSession()))
+    ZLayer.fromAcquireRelease(acquire)(session => URIO(session.close()))
+  }
