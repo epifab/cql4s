@@ -20,7 +20,7 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
 
   def execute[Input](command: Command[Input]): Input => F[Unit] =
     (input: Input) =>
-      execute(command)(input).void
+      execute(CqlStatement(command)(input)).void
 
   def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => F[Unit] =
     (rows: Iterable[Input]) =>
