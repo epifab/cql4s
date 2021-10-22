@@ -11,18 +11,18 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
   private def execute[T <: Statement[T]](statement: Statement[T]): F[ResultSet] =
     Sync[F].blocking(session.execute(statement))
 
-  def execute[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[F, Output] =
+  override def stream[Input, Output](query: Query[Input, Output]): Input => fs2.Stream[F, Output] =
     (input: Input) =>
       for {
         resultSet <- fs2.Stream.eval(execute(CqlStatement(query)(input)))
         row <- fs2.Stream.eval(Sync[F].blocking(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
 
-  def execute[Input](command: Command[Input]): Input => F[Unit] =
+  override def execute[Input](command: Command[Input]): Input => F[Unit] =
     (input: Input) =>
       execute(CqlStatement(command)(input)).void
 
-  def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => F[Unit] =
+  override def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => F[Unit] =
     (rows: Iterable[Input]) =>
       execute(CqlStatement(batchType, command)(rows)).void
 

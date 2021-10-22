@@ -12,14 +12,14 @@ class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
       .into(events)
       .compile
       .pcontramap[Event]
-      .run
+      .execute
 
   val updateTickets: (Map[Currency, BigDecimal], Metadata, UUID) => F[Unit] =
     Update(events)
       .set(e => (e("tickets"), e("metadata")))
       .where(_("id") === :?)
       .compile
-      .run
+      .execute
       .pipe(Function.untupled)
 
   val findById: UUID => S[Event] =
@@ -29,4 +29,4 @@ class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
       .where(_("id") === :?)
       .compile
       .pmap[Event]
-      .run
+      .stream

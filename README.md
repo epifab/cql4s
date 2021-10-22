@@ -9,13 +9,15 @@ CQL4s is a typesafe CQL DSL and Cassandra client for *Scala 3*.
 
 CQL4s brings Cassandra to the wonderful world of functional Scala,
 by supporting out of the box [cats effect](https://typelevel.org/cats-effect) / [fs2](https://fs2.io/)
-and [ZIO](https://zio.dev/).
+and [ZIO 2](https://zio.dev/).
 
-Thanks to its strongly typed DSL, it helps to prevent common mistakes **at compile time**, such as 
-typos (referring to a non-existing table or column),
+CQL4s is a pure functional layer built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).  
+The main difference with similar libraries lies on a strongly typed, "as close as possible to cql" DSL,
+that will help to prevent common mistakes **at compile time**, such as 
+referring to a non-existing table, type or column,
 comparing fields of unrelated types, 
-decoding the results of a query into an incompatible data structure,
-issues with placeholder encoding for queries and commands.
+decoding the results of a query into an incompatible data structure
+and issues related to placeholders encoding.
 
 CQL4s was strongly inspired by [Tydal](https://github.com/epifab/tydal3).
 
@@ -127,14 +129,14 @@ class EventsRepo[F[_], S[_]](using cassandra: Runtime[F, S]):
       .into(events)
       .compile
       .pcontramap[Event]
-      .run
+      .execute
 
   val updateTickets: (Map[Currency, BigDecimal], Metadata, UUID) => F[Unit] =
     Update(events)
       .set(e => (e("tickets"), e("metadata")))
       .where(_("id") === :?)
       .compile
-      .run
+      .execute
       .pipe(Function.untupled)
 
   val findById: UUID => S[Event] =
@@ -144,7 +146,7 @@ class EventsRepo[F[_], S[_]](using cassandra: Runtime[F, S]):
       .where(_("id") === :?)
       .compile
       .pmap[Event]
-      .run
+      .stream
 ```
 
 #### The app
@@ -233,7 +235,3 @@ $ docker-compose up -d
 $ sbt test
 ```
 
-
-## Dependencies
-
-CQL4s is built on top of the [Datastax Java driver](https://github.com/datastax/java-driver).

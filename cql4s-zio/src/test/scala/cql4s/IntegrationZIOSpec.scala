@@ -14,23 +14,23 @@ import zio.stream.ZSink
 
 import java.util.Currency
 
-class IntegrationZioSpec extends AnyFreeSpec with Matchers:
+class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
 
-  val cassandraRuntime = CassandraZioRuntime(CassandraTestConfig)
+  val cassandraRuntime = CassandraZIORuntime(CassandraTestConfig)
   val ioRuntime = zio.Runtime.default
 
   "Can insert / retrieve data" in {
     val program: ZIO[Has[CqlSession], Throwable, (Option[Event], Option[Event])] = for {
-      _ <- CassandraZioRuntime.execute(truncateEvents)(())
-      _ <- CassandraZioRuntime.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
-      _ <- CassandraZioRuntime.execute(findEventById)(event1.id).tap(e => CassandraZioRuntime.execute(updateEventTickets)((
+      _ <- CassandraZIORuntime.execute(truncateEvents)(())
+      _ <- CassandraZIORuntime.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
+      _ <- CassandraZIORuntime.stream(findEventById)(event1.id).tap(e => CassandraZIORuntime.execute(updateEventTickets)((
         Map(Currency.getInstance("USD") -> 32),
         e.metadata.copy(updatedAt = Some(now)),
         e.id
       ))).run(ZSink.drain)
-      updatedEvent <- CassandraZioRuntime.execute(findEventById)(event1.id).run(ZSink.last[Event])
-      _ <- CassandraZioRuntime.execute(deleteEvent)(event1.id)
-      deletedEvent <- CassandraZioRuntime.execute(findEventById)(event1.id).run(ZSink.last[Event])
+      updatedEvent <- CassandraZIORuntime.stream(findEventById)(event1.id).run(ZSink.last[Event])
+      _ <- CassandraZIORuntime.execute(deleteEvent)(event1.id)
+      deletedEvent <- CassandraZIORuntime.stream(findEventById)(event1.id).run(ZSink.last[Event])
     } yield (updatedEvent, deletedEvent)
 
     ioRuntime.unsafeRun(program.provideLayer(cassandraRuntime)) shouldBe (

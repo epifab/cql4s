@@ -24,14 +24,14 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
       for {
         _ <- cassandra.execute(truncateEvents)(())
         _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
-        _ <- cassandra.execute(findEventById)(event1.id).evalTap(e => cassandra.execute(updateEventTickets)((
+        _ <- cassandra.stream(findEventById)(event1.id).evalTap(e => cassandra.execute(updateEventTickets)((
           Map(Currency.getInstance("USD") -> 32),
           e.metadata.copy(updatedAt = Some(now)),
           e.id
         ))).compile.drain
-        updatedEvent <- cassandra.execute(findEventById)(event1.id).compile.last
+        updatedEvent <- cassandra.stream(findEventById)(event1.id).compile.last
         _ <- cassandra.execute(deleteEvent)(event1.id)
-        deletedEvent <- cassandra.execute(findEventById)(event1.id).compile.last
+        deletedEvent <- cassandra.stream(findEventById)(event1.id).compile.last
       } yield (updatedEvent, deletedEvent)
     )
 

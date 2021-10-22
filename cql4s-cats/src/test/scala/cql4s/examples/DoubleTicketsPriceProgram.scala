@@ -44,7 +44,7 @@ object EventRepo:
 
   def apply[F[_]](cassandra: CassandraCatsRuntime[F]): EventRepo[F] = new EventRepo:
     override def findEventsByVenue(venue: String): fs2.Stream[F, Event] =
-      cassandra.execute(select)(venue)
+      cassandra.stream(select)(venue)
 
     override def addEvent(event: Event): F[Unit] =
       cassandra.execute(insert)(event)
