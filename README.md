@@ -170,7 +170,7 @@ object Program extends IOApp:
   )
   
   def run(args: List[String]): IO[ExitCode] =
-    CassandraRuntimeTypelevel[IO](cassandraConfig)
+    CassandraCatsRuntime[IO](cassandraConfig)
       .map(cassandra => new EventsRepo(using cassandra))
       .use { repo =>
         repo
