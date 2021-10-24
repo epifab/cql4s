@@ -18,6 +18,20 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
         row <- fs2.Stream.eval(Sync[F].blocking(Option(resultSet.one()))).repeat.collectWhile { case Some(row) => row }
       } yield query.decoder.decode(row)
 
+  override def option[Input, Output](query: Query[Input, Output]): Input => F[Option[Output]] =
+    (input: Input) =>
+      stream(query)(input)
+        .compile
+        .fold[Option[Output]](None) {
+          case ((None, output)) => Some(output)
+          case _ => throw new RuntimeException(s"At most 1 record expected, got many for $query")
+        }
+
+  override def one[Input, Output](query: Query[Input, Output]): Input => F[Output] =
+    (input: Input) =>
+      option(query)(input)
+        .map(_.getOrElse(throw new RuntimeException(s"Exactly one record expected, got none for $query")))
+
   override def execute[Input](command: Command[Input]): Input => F[Unit] =
     (input: Input) =>
       execute(CqlStatement(command)(input)).void

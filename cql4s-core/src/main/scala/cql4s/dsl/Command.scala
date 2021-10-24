@@ -6,6 +6,7 @@ import cql4s.CassandraRuntime
 import scala.deriving.Mirror
 
 class Command[Input](val cql: String, val encoder: Encoder[Input]):
+  override val toString: String = cql
 
   def contramap[I](f: I => Input): Command[I] = Command(cql, encoder.contramap(f))
 
