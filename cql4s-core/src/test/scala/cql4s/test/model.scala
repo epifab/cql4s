@@ -4,7 +4,8 @@ import java.time.Instant
 import java.util.{Currency, UUID}
 
 object model:
-  case class User(name: String, email: Option[String])
+  case class User(name: String, email: Option[String], phone: (Short, String))
+
   case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
 
   case class Event(

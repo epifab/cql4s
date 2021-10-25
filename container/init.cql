@@ -6,7 +6,8 @@ CREATE KEYSPACE IF NOT EXISTS music WITH REPLICATION = {
 
 CREATE TYPE IF NOT EXISTS music.user (
     name text,
-    email text
+    email text,
+    phone tuple<smallint, text>
 );
 
 CREATE TYPE IF NOT EXISTS music.metadata (
@@ -19,9 +20,9 @@ CREATE TYPE IF NOT EXISTS music.metadata (
 CREATE TABLE IF NOT EXISTS music.events (
     id uuid primary key,
     start_time timestamp,
-    artists list<varchar>,
-    venue varchar,
-    tickets map<varchar, decimal>,
-    tags set<varchar>,
+    artists list<text>,
+    venue text,
+    tickets map<text, decimal>,
+    tags set<text>,
     metadata frozen<metadata>
 );

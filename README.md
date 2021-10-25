@@ -33,7 +33,7 @@ Simple, dependency-free model for the data stored in Cassandra.
 import java.time.Instant
 import java.util.{Currency, UUID}
 
-case class User(name: String, email: Option[String])
+case class User(name: String, email: Option[String], phone: (Short, String))
 
 case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
 
@@ -77,8 +77,9 @@ class userType extends udt[
   "music",  // keyspace
   "user",   // udt name
   (
-    "name" :=: text,
-    "email" :=: nullable[text]
+    "name"  :=: text,
+    "email" :=: nullable[text],
+    "phone" :=: (smallint, text)  // tuple
   )
 ]
 
@@ -89,7 +90,7 @@ class metadataType extends udt[
   (
     "createdAt" :=: timestamp,
     "updatedAt" :=: nullable[timestamp],
-    "author" :=: userType   // nested udt
+    "author"    :=: userType   // nested udt
   )
 ]
 
@@ -101,13 +102,13 @@ object events extends Table[
   "music",  // keyspace
   "events", // table name
   (
-    "id" :=: uuid,
+    "id"         :=: uuid,
     "start_time" :=: timestamp,
-    "artists" :=: list[varchar],
-    "venue" :=: text,
-    "tickets" :=: map[currencyType, decimal],
-    "tags" :=: set[varchar],
-    "metadata" :=: metadataType
+    "artists"    :=: list[text],
+    "venue"      :=: text,
+    "tickets"    :=: map[currencyType, decimal],
+    "tags"       :=: set[text],
+    "metadata"   :=: metadataType
   )
 ]
 ```

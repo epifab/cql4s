@@ -36,8 +36,8 @@
 
 - [user defined types](https://cassandra.apache.org/doc/latest/cassandra/cql/types.html#udts) - `udt[Keyspace, Name, Components]`
 - nullable[T] - optional fields
-- json[T] - json encoded text (to get json support install `cql4s-circe`)
-- [tuples](https://cassandra.apache.org/doc/latest/cassandra/cql/types.html#tuples) - not supported
+- json[T] - json encoded text (supported by `cql4s-circe`)
+- [tuples](https://cassandra.apache.org/doc/latest/cassandra/cql/types.html#tuples)
 
 ### [Operators](https://cassandra.apache.org/doc/latest/cassandra/cql/operators.html) (none supported)
 
@@ -67,7 +67,7 @@
 - toDate
 - toTimestamp
 - toUnixTimestamp
-- dateOf (not suppoorted)
+- dateOf
 - unixTimestampOf
 
 

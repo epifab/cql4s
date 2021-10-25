@@ -19,7 +19,8 @@ object schema:
     "user",   // udt name
     (
       "name" :=: text,
-      "email" :=: nullable[text]
+      "email" :=: nullable[text],
+      "phone" :=: (smallint, text)
     )
   ]
 

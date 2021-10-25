@@ -19,7 +19,7 @@ object fixtures:
       Currency.getInstance("GBP") -> BigDecimal(16)
     ),
     Set("rock", "post rock", "indie"),
-    Metadata(now, None, User("epifab", Some("info@epifab.solutions")))
+    Metadata(now, None, User("epifab", Some("info@epifab.solutions"), (44, "12345678")))
   )
 
   val event2 = event1.copy(

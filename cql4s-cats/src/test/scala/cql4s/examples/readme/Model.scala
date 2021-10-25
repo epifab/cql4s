@@ -3,7 +3,7 @@ package cql4s.examples.readme
 import java.time.Instant
 import java.util.{Currency, UUID}
 
-case class User(name: String, email: Option[String])
+case class User(name: String, email: Option[String], phone: (Short, String))
 
 case class Metadata(createdAt: Instant, updatedAt: Option[Instant], author: User)
 

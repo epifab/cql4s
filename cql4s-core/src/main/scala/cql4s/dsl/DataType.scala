@@ -1,12 +1,13 @@
 package cql4s.dsl
 
 import com.datastax.oss.driver.api.core.ProtocolVersion
-import com.datastax.oss.driver.api.core.`type`.{UserDefinedType, DataType as DriverDataType, DataTypes as DriverDataTypes}
+import com.datastax.oss.driver.api.core.`type`.{TupleType, UserDefinedType, DataType as DriverDataType, DataTypes as DriverDataTypes}
 import com.datastax.oss.driver.api.core.`type`.codec.{TypeCodec as DriverTypeCodec, TypeCodecs as DriverTypeCodecs}
 import com.datastax.oss.driver.api.core.`type`.reflect.GenericType
-import com.datastax.oss.driver.api.core.data.{CqlDuration, UdtValue}
-import com.datastax.oss.driver.internal.core.`type`.{PrimitiveType, UserDefinedTypeBuilder}
-import cql4s.utils.{ColumnsFactory, NonEmptyListOfColumns}
+import com.datastax.oss.driver.api.core.data.{CqlDuration, TupleValue, UdtValue}
+import com.datastax.oss.driver.internal.core.`type`.{DefaultTupleType, PrimitiveType, UserDefinedTypeBuilder}
+import com.datastax.oss.driver.internal.core.data.DefaultTupleValue
+import cql4s.utils.{ColumnsFactory, NonEmptyListOfColumns, TupleCodecs, TupleDecoder, TupleEncoder}
 
 import java.net.InetAddress
 import java.nio.ByteBuffer
@@ -249,7 +250,7 @@ object DataType:
 
     override val dbName: String = name.escaped
 
-  given udtCodec[Keyspace, Name, Components, Output, J >: Null, S <: Tuple, P <: Product](
+  given udtCodec[Keyspace, Name, Components, J >: Null, S <: Tuple, P <: Product](
     using
     dt: DataTypeCodec[untypedUdt[Keyspace, Name, Components], J, S],
     m: Mirror.ProductOf[P],
@@ -257,3 +258,21 @@ object DataType:
     toProduct: S <:< Product
   ): DataTypeCodec[udt[P, Keyspace, Name, Components], J, P] =
     dt.map(p => i(Tuple.fromProductTyped(p)), x => m.fromProduct(toProduct(x)))
+
+  given tupleCodec[Components <: NonEmptyTuple, Output <: NonEmptyTuple] (
+    using
+    codecs: TupleCodecs[Components],
+    encoder: TupleEncoder[Components, Output],
+    decoder: TupleDecoder[Components, Output]
+  ): DataType[Components] with
+
+    override type JavaType = TupleValue
+    override type ScalaType = Output
+
+    override val driverDataType: TupleType = new DefaultTupleType(codecs.toList.map(_.driverDataType).asJava)
+    override val driverCodec: DriverTypeCodec[TupleValue] = DriverTypeCodecs.tupleOf(driverDataType)
+
+    override def decode: TupleValue => Output = tuple => decoder.decode(tuple)
+    override def encode: Output => TupleValue = output => new DefaultTupleValue(driverDataType, encoder.encode(output): _*)
+
+    override val dbName: String = s"tuple<${codecs.toList.map(_.dbName).mkString(", ")}>"

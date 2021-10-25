@@ -74,7 +74,7 @@ object DoubleTicketsPriceProgram extends IOApp:
         metadata = Metadata(
           createdAt = Instant.now,
           updatedAt = None,
-          author = User("epifab", Some("info@epifab.solutions"))
+          author = User("epifab", Some("info@epifab.solutions"), (44, "12345678"))
         )
       )
     }
