@@ -1,7 +1,7 @@
 package cql4s.examples.readme
 
-import cql4s.dsl.*
 import cql4s.CassandraRuntime
+import cql4s.dsl.*
 
 import java.util.{Currency, UUID}
 import scala.util.chaining.*

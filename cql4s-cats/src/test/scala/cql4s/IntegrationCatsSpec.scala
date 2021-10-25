@@ -20,26 +20,27 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
   implicit val ioRuntime: IORuntime = IORuntime.global
 
   "Can insert / retrieve data" in {
-    val result: IO[(Option[Event], Option[Event])] = cassandraRuntime.use(cassandra =>
+    val result: IO[(Event, Option[Event])] = cassandraRuntime.use(cassandra =>
+      given CassandraCatsRuntime.Aux[IO] = cassandra
       for {
-        _ <- cassandra.execute(truncateEvents)(())
-        _ <- cassandra.executeBatch(insertEvent, BatchType.LOGGED)(List(event1, event2))
-        _ <- cassandra.stream(findEventById)(event1.id).evalTap(e => cassandra.execute(updateEventTickets)((
+        _ <- truncateEvents.execute(())
+        _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
+        _ <- findEventById.stream(event1.id).evalTap(e => updateEventTickets.execute((
           Map(Currency.getInstance("USD") -> 32),
           e.metadata.copy(updatedAt = Some(now)),
           e.id
         ))).compile.drain
-        updatedEvent <- cassandra.stream(findEventById)(event1.id).compile.last
-        _ <- cassandra.execute(deleteEvent)(event1.id)
-        deletedEvent <- cassandra.stream(findEventById)(event1.id).compile.last
+        updatedEvent <- findEventById.one(event1.id)
+        _ <- deleteEvent.execute(event1.id)
+        deletedEvent <- findEventById.stream(event1.id).compile.last
       } yield (updatedEvent, deletedEvent)
     )
 
     result.unsafeRunSync() shouldBe (
-      Some(event1.copy(
+      event1.copy(
         tickets = Map(Currency.getInstance("USD") -> 32),
         metadata = event1.metadata.copy(updatedAt = Some(now))
-      )),
+      ),
       None
     )
   }

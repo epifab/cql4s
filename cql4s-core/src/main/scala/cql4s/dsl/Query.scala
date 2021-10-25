@@ -4,7 +4,6 @@ import cql4s.CassandraRuntime
 
 import scala.deriving.Mirror
 
-
 class Query[Input, Output](val cql: String, val encoder: Encoder[Input], val decoder: Decoder[Output]):
   override val toString: String = cql
 
@@ -20,3 +19,9 @@ class Query[Input, Output](val cql: String, val encoder: Encoder[Input], val dec
 
   def stream[F[_], S[_]](using cassandra: CassandraRuntime[F, S]): Input => S[Output] =
     cassandra.stream(this)
+
+  def option[F[_], S[_]](using cassandra: CassandraRuntime[F, S]): Input => F[Option[Output]] =
+    cassandra.option(this)
+
+  def one[F[_], S[_]](using cassandra: CassandraRuntime[F, S]): Input => F[Output] =
+    cassandra.one(this)

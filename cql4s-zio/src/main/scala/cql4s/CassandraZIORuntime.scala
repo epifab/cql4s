@@ -7,6 +7,8 @@ import zio.stream.ZStream
 import zio.{Has, URIO, ZIO, ZLayer}
 
 object CassandraZIORuntime extends CassandraRuntime[[A] =>> ZIO[Has[CqlSession], Throwable, A], [A] =>> ZStream[Has[CqlSession], Throwable, A]]:
+  type Aux = CassandraRuntime[[A] =>> ZIO[Has[CqlSession], Throwable, A], [A] =>> ZStream[Has[CqlSession], Throwable, A]]
+
   private def execute[T <: Statement[T]](statement: Statement[T]): ZIO[Has[CqlSession], Throwable, ResultSet] =
     for {
       session <- ZIO.service[CqlSession]

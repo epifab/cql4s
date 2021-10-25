@@ -8,6 +8,7 @@ import cql4s.dsl.*
 import cql4s.{CassandraConfig, CassandraRuntime}
 
 class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extends CassandraRuntime[F, [A] =>> fs2.Stream[F, A]]:
+
   private def execute[T <: Statement[T]](statement: Statement[T]): F[ResultSet] =
     Sync[F].blocking(session.execute(statement))
 
@@ -42,6 +43,8 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
 
 
 object CassandraCatsRuntime:
+  type Aux[F[_]] = CassandraRuntime[F, [A] =>> fs2.Stream[F, A]]
+
   def apply[F[_]: Sync](config: CassandraConfig): Resource[F, CassandraCatsRuntime[F]] =
     Resource.make(
       Sync[F].blocking(
