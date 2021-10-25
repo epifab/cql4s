@@ -23,7 +23,7 @@ class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
     val program: ZIO[Has[CqlSession], Throwable, (Event, Option[Event])] = for {
       _ <- truncateEvents.execute(())
       _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
-      _ <- findEventById.stream(event1.id).tap(e => updateEventTickets.execute((
+      _ <- findEventsById.stream(List(event1.id, event2.id)).tap(e => updateEventTickets.execute((
         Map(Currency.getInstance("USD") -> 32),
         e.metadata.copy(updatedAt = Some(now)),
         e.id

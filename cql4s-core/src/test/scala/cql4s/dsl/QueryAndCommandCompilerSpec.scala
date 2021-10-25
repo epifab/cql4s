@@ -25,10 +25,10 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
   }
 
   "Select CQL" in {
-    findEventById.cql shouldBe "SELECT" +
+    findEventsById.cql shouldBe "SELECT" +
       " id, venue, start_time, artists, tickets, tags, metadata" +
       " FROM music.events" +
-      " WHERE id = ?"
+      " WHERE id IN ?"
   }
 
   "Delete CQL" in {

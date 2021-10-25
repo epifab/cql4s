@@ -31,10 +31,24 @@ object queries:
       .where(_("id") === :?)
       .compile
 
-  val findEventById: Query[UUID, Event] =
+  private val findEvents =
     Select
       .from(events)
       .take(_.*)
+
+  val findEventsById: Query[List[UUID], Event] =
+    findEvents
+      .where(_("id") in :?)
+      .compile
+      .pmap[Event]
+
+  val findEventById: Query[UUID, Event] =
+    findEvents
       .where(_("id") === :?)
+      .compile
+      .pmap[Event]
+
+  val findAllEvents: Query[Unit, Event] =
+    findEvents
       .compile
       .pmap[Event]

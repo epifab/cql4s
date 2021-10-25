@@ -25,7 +25,7 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
       for {
         _ <- truncateEvents.execute(())
         _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
-        _ <- findEventById.stream(event1.id).evalTap(e => updateEventTickets.execute((
+        _ <- findEventsById.stream(List(event1.id, event2.id)).evalTap(e => updateEventTickets.execute((
           Map(Currency.getInstance("USD") -> 32),
           e.metadata.copy(updatedAt = Some(now)),
           e.id

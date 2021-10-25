@@ -22,11 +22,11 @@ class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
       .execute
       .pipe(Function.untupled)
 
-  val findById: UUID => S[Event] =
+  val findByIds: List[UUID] => S[Event] =
     Select
       .from(events)
       .take(_.*)
-      .where(_("id") === :?)
+      .where(_("id") in :?)
       .compile
       .pmap[Event]
       .stream

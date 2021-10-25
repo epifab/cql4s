@@ -139,11 +139,11 @@ class EventsRepo[F[_], S[_]](using cassandra: Runtime[F, S]):
       .execute
       .pipe(Function.untupled)
 
-  val findById: UUID => S[Event] =
+  val findByIds: List[UUID] => S[Event] =
     Select
       .from(events)
       .take(_.*)
-      .where(_("id") === :?)
+      .where(_("id") in :?)
       .compile
       .pmap[Event]
       .stream
@@ -174,7 +174,7 @@ object Program extends IOApp:
       .map(cassandra => new EventsRepo(using cassandra))
       .use { repo =>
         repo
-          .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
+          .findByIds(args.map(UUID.fromString))
           // Update existing event tickets
           .evalTap(e => repo.updateTickets(
             Map(Currency.getInstance("GBP") -> 49.99),

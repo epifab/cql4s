@@ -48,3 +48,13 @@ object AreComparable extends SameCategoryComparisons:
   given leftNullable[T: DataType: IsNotNullable, U: DataType: IsNotNullable] (using AreComparable[T, U]): AreComparable[nullable[T], U] with { }
   given rightNullable[T: DataType: IsNotNullable, U: DataType: IsNotNullable] (using AreComparable[T, U]): AreComparable[T, nullable[U]] with { }
   given field[T: DataType, U: DataType] (using AreComparable[T, U]): AreComparable[Field[T], Field[U]] with { }
+
+
+trait CanContain[-T, -U]
+
+object CanContain:
+  given notNullableList[T, U](using AreComparable[T, U]): CanContain[list[T], U] with { }
+  given leftNullableList[T, U](using AreComparable[T, U]): CanContain[nullable[list[T]], U] with { }
+  given rightNullableList[T, U](using AreComparable[T, U]): CanContain[list[T], nullable[U]] with { }
+  given bothNullableList[T, U](using AreComparable[T, U]): CanContain[nullable[list[T]], nullable[U]] with { }
+  given field[T, U](using CanContain[U, T]): CanContain[Field[U], Field[T]] with { }

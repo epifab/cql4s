@@ -43,3 +43,4 @@ object LogicalExprFragment:
         case _: LessThan[_, _] => e1.concatenateRequired(e2, " < ")
         case _: GreaterThanOrEqual[_, _] => e1.concatenateRequired(e2, " >= ")
         case _: LessThanOrEqual[_, _] => e1.concatenateRequired(e2, " <= ")
+        case _: In[_, _] => e1.concatenateRequired(e2, " IN ")

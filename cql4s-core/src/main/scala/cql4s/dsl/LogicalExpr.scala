@@ -40,3 +40,6 @@ case class GreaterThanOrEqual[+F1 <: Field[_], +F2 <: Field[_]](left: F1, right:
 
 case class LessThanOrEqual[+F1 <: Field[_], +F2 <: Field[_]](left: F1, right: F2)(using AreComparable[F1, F2])
   extends Comparison[F1, F2]
+
+case class In[+F1 <: Field[_], +F2 <: Field[_]](left: F1, right: F2)(using CanContain[F2, F1])
+  extends Comparison[F1, F2]

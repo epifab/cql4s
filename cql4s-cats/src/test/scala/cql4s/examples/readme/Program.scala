@@ -18,7 +18,7 @@ object Program extends IOApp:
   def run(args: List[String]): IO[ExitCode] =
     CassandraCatsRuntime[IO](cassandraConfig).map(cassandra => new EventsRepo(using cassandra)).use { repo =>
       repo
-        .findById(UUID.fromString("246BDDC4-BAF3-41BF-AFB5-FA0992E4DC6B"))
+        .findByIds(args.map(UUID.fromString))
         // Update existing event price
         .evalTap(e => repo.updateTickets(
           Map(Currency.getInstance("GBP") -> 49.99),
