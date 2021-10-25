@@ -77,8 +77,10 @@ type map[K, V]
 type list[T]
 type set[T]
 
-sealed private[cql4s] trait untypedUdt[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 trait udt[P <: Product, Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
+
+object udt:
+  trait raw[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 
 type nullable[T]
 
@@ -219,14 +221,14 @@ object DataType:
     override val driverCodec: DriverTypeCodec[JT] = nested.driverCodec
     override val dbName: String = nested.dbName
 
-  given untypedUdtCodec[Keyspace, Name, Components, Output](
+  given rawUdtCodec[Keyspace, Name, Components, Output] (
     using
     keyspace: DbIdentifier[Keyspace],
     name: DbIdentifier[Name],
     columnsFactory: ColumnsFactory[Components],
     decoderAdapter: DecoderAdapter[Components, Output],
-    encoderAdapter: EncoderFactory[Components, Output]
-  ): DataType[untypedUdt[Keyspace, Name, Components]] with
+    encoderFactory: EncoderFactory[Components, Output]
+  ): DataType[udt.raw[Keyspace, Name, Components]] with
     override type JavaType = UdtValue
     override type ScalaType = Output
 
@@ -240,7 +242,7 @@ object DataType:
     override val driverCodec: DriverTypeCodec[UdtValue] = DriverTypeCodecs.udtOf(driverDataType)
 
     override def decode: UdtValue => Output = decoderAdapter.decode
-    override def encode: Output => UdtValue = (output => encoderAdapter(columnsFactory.value)
+    override def encode: Output => UdtValue = (output => encoderFactory(columnsFactory.value)
       .encode(output)
       .zip(columnsFactory.toList)
       .zipWithIndex
@@ -252,7 +254,7 @@ object DataType:
 
   given udtCodec[Keyspace, Name, Components, J >: Null, S <: Tuple, P <: Product](
     using
-    dt: DataTypeCodec[untypedUdt[Keyspace, Name, Components], J, S],
+    dt: DataTypeCodec[udt.raw[Keyspace, Name, Components], J, S],
     m: Mirror.ProductOf[P],
     i: m.MirroredElemTypes =:= S,
     toProduct: S <:< Product
