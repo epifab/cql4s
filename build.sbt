@@ -11,7 +11,7 @@ Global / scalaVersion      := scala3Version
 
 val scalaTestVersion     = "3.2.9"
 val circeVersion         = "0.14.1"
-val fs2Version           = "3.1.3"
+val fs2Version           = "3.1.6"
 val catsVersion          = "2.6.1"
 val catsEffectVersion    = "3.2.9"
 val zioVersion           = "2.0.0-M4"
@@ -35,9 +35,9 @@ lazy val `cql4s-circe` =
     .dependsOn(`cql4s-core`)
     .settings(
       libraryDependencies ++= commonDependencies ++ Seq(
-        "io.circe"         %% "circe-core"    % circeVersion,
-        "io.circe"         %% "circe-generic" % circeVersion,
-        "io.circe"         %% "circe-parser"  % circeVersion,
+        "io.circe" %% "circe-core"    % circeVersion,
+        "io.circe" %% "circe-generic" % circeVersion,
+        "io.circe" %% "circe-parser"  % circeVersion,
       )
     )
 
@@ -47,10 +47,10 @@ lazy val `cql4s-cats` =
     .dependsOn(`cql4s-core` % "compile->compile;test->test")
     .settings(
       libraryDependencies ++= Seq(
-        "co.fs2"           %% "fs2-core"      % fs2Version,
-        "co.fs2"           %% "fs2-io"        % fs2Version,
-        "org.typelevel"    %% "cats-core"     % catsVersion,
-        "org.typelevel"    %% "cats-effect"   % catsEffectVersion
+        "co.fs2"        %% "fs2-core"    % fs2Version,
+        "co.fs2"        %% "fs2-io"      % fs2Version,
+        "org.typelevel" %% "cats-core"   % catsVersion,
+        "org.typelevel" %% "cats-effect" % catsEffectVersion
       ) ++ commonDependencies
     )
 
