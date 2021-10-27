@@ -11,12 +11,14 @@ class DecoderMap[T, U](tDec: Decoder[T], map: T => U) extends Decoder[U]:
 
 trait DecoderAdapter[-Raw, T] extends Decoder[T]:
   override final def decode(row: GettableByIndex): T = decode(row, 0)
-  def decode(row: GettableByIndex, state: Int): T
+  private[dsl] def decode(row: GettableByIndex, state: Int): T
 
-trait DefaultDecoderAdapter[-Raw, T] extends DecoderAdapter[Raw, T]
+trait DefaultDecoderAdapter[-Raw, T] extends DecoderAdapter[Raw, T]:
+  def size: Int
 
 object DefaultDecoderAdapter:
   given empty: DefaultDecoderAdapter[EmptyTuple, EmptyTuple] with
+    override val size: Int = 0
     def decode(row: GettableByIndex, state: Int): EmptyTuple = EmptyTuple
 
   given nonEmpty[RawHead, Head, RawTail <: Tuple, Tail <: Tuple](
@@ -24,10 +26,12 @@ object DefaultDecoderAdapter:
     head: DefaultDecoderAdapter[RawHead, Head],
     tail: DefaultDecoderAdapter[RawTail, Tail]
   ): DefaultDecoderAdapter[RawHead *: RawTail, Head *: Tail] with
+    override val size: Int = head.size + tail.size
     def decode(row: GettableByIndex, state: Int): Head *: Tail =
-      head.decode(row, state) *: tail.decode(row, state + 1)
+      head.decode(row, state) *: tail.decode(row, state + head.size)
 
   given field[Type, F <: Field[Type], JT, ST](using dt: DataTypeCodec[Type, JT, ST]): DefaultDecoderAdapter[F, ST] with
+    override val size: Int = 1
     def decode(row: GettableByIndex, state: Int): ST =
       dt.decode(row.get(state, dt.driverCodec))
 
@@ -35,6 +39,8 @@ trait LowPriorityDecoderAdapter:
   given default[A, B](using base: DefaultDecoderAdapter[A, B]): DecoderAdapter[A, B] = base
 
 object DecoderAdapter extends LowPriorityDecoderAdapter:
+  def apply[Raw, Output](raw: Raw)(using da: DecoderAdapter[Raw, Output]): Decoder[Output] = da
+
   given unit: DecoderAdapter[EmptyTuple, Unit] with
     def decode(row: GettableByIndex, state: Int): Unit = ()
 

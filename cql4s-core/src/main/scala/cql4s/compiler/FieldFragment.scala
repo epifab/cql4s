@@ -17,3 +17,15 @@ object FieldFragment:
   given const[P <: Const[_]]: FieldFragment[P, P *: EmptyTuple] with
     def build(const: P): CompiledFragment[P *: EmptyTuple] =
       CompiledFragment(List("?"), const *: EmptyTuple)
+
+  given cast[F <: Field[_], I <: Tuple, U](using inner: FieldFragment[F, I]): FieldFragment[Cast[F, U], I] with
+    def build(cast: Cast[F, U]): CompiledFragment[I] = inner.build(cast.field).wrap("CAST(", s" AS ${cast.dataType.dbName})")
+
+  given dbFunction[FS <: Tuple, T, Output <: Tuple](
+    using
+    inner: ListFragment[FieldFragment, FS, Output]
+  ): FieldFragment[DbFunction[FS, T], Output] with
+    def build(func: DbFunction[FS, T]): CompiledFragment[Output] =
+      func match
+        case f: DbFunction2[_, _, _] if f.infixNotation => inner.build(func.params, s" ${func.dbName} ").wrap("(", ")")
+        case _ => inner.build(func.params, ", ").wrap(s"${func.dbName}(", ")")

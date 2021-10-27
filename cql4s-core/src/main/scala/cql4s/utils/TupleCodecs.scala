@@ -15,20 +15,20 @@ object TupleCodecs:
 
 
 trait TupleDecoder[Types, Output]:
-  def decode(row: TupleValue): Output = decode(0, row)
-  protected def decode(state: Int, row: GettableByIndex): Output
+  def decode(row: TupleValue): Output = decode(row, 0)
+  private[utils] def decode(row: GettableByIndex, state: Int): Output
 
 object TupleDecoder:
   given TupleDecoder[EmptyTuple, EmptyTuple] with
-    def decode(state: Int, row: GettableByIndex): EmptyTuple = EmptyTuple
+    def decode(row: GettableByIndex, state: Int): EmptyTuple = EmptyTuple
 
   given [Head, Tail <: Tuple, J, SHead, STail <: Tuple](
     using
     dataType: DataTypeCodec[Head, J, SHead],
     tailDecoder: TupleDecoder[Tail, STail]
   ): TupleDecoder[Head *: Tail, SHead *: STail] with
-    def decode(state: Int, row: GettableByIndex): SHead *: STail =
-      dataType.decode(row.get(state, dataType.driverCodec)) *: tailDecoder.decode(state + 1, row)
+    def decode(row: GettableByIndex, state: Int): SHead *: STail =
+      dataType.decode(row.get(state, dataType.driverCodec)) *: tailDecoder.decode(row, state + 1)
 
 trait TupleEncoder[Types, Output]:
   def encode(output: Output): List[Any]

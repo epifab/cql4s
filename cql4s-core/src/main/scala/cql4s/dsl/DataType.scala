@@ -77,10 +77,10 @@ type map[K, V]
 type list[T]
 type set[T]
 
-trait udt[P <: Product, Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
+abstract class udt[P <: Product, Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 
 object udt:
-  trait raw[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
+  abstract class raw[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 
 type nullable[T]
 
@@ -221,14 +221,14 @@ object DataType:
     override val driverCodec: DriverTypeCodec[JT] = nested.driverCodec
     override val dbName: String = nested.dbName
 
-  given rawUdtCodec[Keyspace, Name, Components, Output] (
+  given rawUdtCodec[Keyspace, Name, Columns, Output] (
     using
     keyspace: DbIdentifier[Keyspace],
     name: DbIdentifier[Name],
-    columnsFactory: ColumnsFactory[Components],
-    decoderAdapter: DecoderAdapter[Components, Output],
-    encoderFactory: EncoderFactory[Components, Output]
-  ): DataType[udt.raw[Keyspace, Name, Components]] with
+    columnsFactory: ColumnsFactory[Columns],
+    decoderAdapter: DecoderAdapter[Columns, Output],
+    encoderFactory: ColumnsEncoderFactory[Columns, Output]
+  ): DataType[udt.raw[Keyspace, Name, Columns]] with
     override type JavaType = UdtValue
     override type ScalaType = Output
 
@@ -242,13 +242,14 @@ object DataType:
     override val driverCodec: DriverTypeCodec[UdtValue] = DriverTypeCodecs.udtOf(driverDataType)
 
     override def decode: UdtValue => Output = decoderAdapter.decode
-    override def encode: Output => UdtValue = (output => encoderFactory(columnsFactory.value)
-      .encode(output)
-      .zip(columnsFactory.toList)
-      .zipWithIndex
-      .foldLeft(driverDataType.newValue()) { case (udtValue, ((value, column), index)) =>
-          udtValue.set(index, value, (column.dataType.driverCodec.asInstanceOf[DriverTypeCodec[value.type]]))
-      })
+    override def encode: Output => UdtValue =
+      (output => encoderFactory(columnsFactory.value)
+        .encode(output)
+        .zip(columnsFactory.toList)
+        .zipWithIndex
+        .foldLeft(driverDataType.newValue()) { case (udtValue, ((value, column), index)) =>
+            udtValue.set(index, value, (column.dataType.driverCodec.asInstanceOf[DriverTypeCodec[value.type]]))
+        })
 
     override val dbName: String = name.escaped
 

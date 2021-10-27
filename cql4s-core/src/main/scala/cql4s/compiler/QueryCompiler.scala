@@ -10,16 +10,16 @@ trait QueryCompiler[-Q, Input, Output]:
 trait QueryFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
 
 object QueryFragment:
-  given select[Keyspace, TableName, TableColumns, Columns, Output, Where <: LogicalExpr, GroupBy, OrderBy, Limit, PerPartitionLimit, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple, I4 <: Tuple, I5 <: Tuple, I6 <: Tuple] (
+  given select[Keyspace, TableName, TableColumns, Fields, Output, Where <: LogicalExpr, GroupBy, OrderBy, Limit, PerPartitionLimit, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple, I4 <: Tuple, I5 <: Tuple, I6 <: Tuple] (
     using
-    fields: ListFragment[FieldFragment, Columns, I1],
+    fields: ListFragment[FieldFragment, Fields, I1],
     where: LogicalExprFragment[Where, I2],
     groupBy: ListFragment[FieldFragment, GroupBy, I3],
     orderBy: ListFragment[OrderByFragment, OrderBy, I4],
     limit: OptionalInputFragment[Limit, I5],
     perPartitionLimit: OptionalInputFragment[PerPartitionLimit, I6]
-  ): QueryFragment[Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy, OrderBy, Limit, PerPartitionLimit], I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] with
-    def build(select: Select[Keyspace, TableName, TableColumns, Columns, Where, GroupBy, OrderBy, Limit, PerPartitionLimit]): CompiledFragment[I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] =
+  ): QueryFragment[Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, OrderBy, Limit, PerPartitionLimit], I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] with
+    def build(select: Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, OrderBy, Limit, PerPartitionLimit]): CompiledFragment[I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] =
       fields
         .build(select.fields, ", ")
         .orElse("1")
@@ -33,7 +33,7 @@ object QueryFragment:
 
 
 object QueryCompiler:
-  given [Fields, S <: Select[_, _, Fields, _, _, _, _, _, _], RawInput <: Tuple, Input, Output] (
+  given [Fields, S <: Select[_, _, _, Fields, _, _, _, _, _], RawInput <: Tuple, Input, Output] (
     using
     queryFragment: QueryFragment[S, RawInput],
     encoder: EncoderFactory[RawInput, Input],
