@@ -27,5 +27,5 @@ object FieldFragment:
   ): FieldFragment[DbFunction[FS, T], Output] with
     def build(func: DbFunction[FS, T]): CompiledFragment[Output] =
       func match
-        case f: DbFunction2[_, _, _] if f.infixNotation => inner.build(func.params, s" ${func.dbName} ").wrap("(", ")")
+        case f: DbFunction2[_, _, _] if f.infixNotation => inner.build(func.params, s" ${func.dbName} ")
         case _ => inner.build(func.params, ", ").wrap(s"${func.dbName}(", ")")

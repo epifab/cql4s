@@ -14,15 +14,12 @@ import org.scalatest.matchers.should.Matchers
 
 import java.util.Currency
 
-class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
-
-  val cassandraRuntime: Resource[IO, CassandraCatsRuntime[IO]] = CassandraCatsRuntime[IO](CassandraTestConfig)
-  implicit val ioRuntime: IORuntime = IORuntime.global
+class IntegrationCatsSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   "Can insert / retrieve data" in {
-    val result: IO[(Event, Option[Event])] = cassandraRuntime.use(cassandra =>
-      given CassandraCatsRuntime.Aux[IO] = cassandra
+    val result: IO[(Event, Option[Event])] =
       for {
+        given _ <- cassandra
         _ <- truncateEvents.execute(())
         _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
         _ <- findEventsById.stream(List(event1.id, event2.id)).evalTap(e => updateEventTickets.execute((
@@ -32,9 +29,8 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers:
         ))).compile.drain
         updatedEvent <- findEventById.one(event1.id)
         _ <- deleteEvent.execute(event1.id)
-        deletedEvent <- findEventById.stream(event1.id).compile.last
+        deletedEvent <- findEventById.option(event1.id)
       } yield (updatedEvent, deletedEvent)
-    )
 
     result.unsafeRunSync() shouldBe (
       event1.copy(

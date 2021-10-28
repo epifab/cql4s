@@ -36,8 +36,8 @@ object ArithmeticType:
   given ArithmeticType[smallint, varint,   varint  ] with { }
   given ArithmeticType[smallint, decimal,  decimal ] with { }
 
-  given ArithmeticType[int,      tinyint,  smallint] with { }
-  given ArithmeticType[int,      smallint, smallint] with { }
+  given ArithmeticType[int,      tinyint,  int     ] with { }
+  given ArithmeticType[int,      smallint, int     ] with { }
   given ArithmeticType[int,      int,      int     ] with { }
   given ArithmeticType[int,      bigint,   bigint  ] with { }
   given ArithmeticType[int,      counter,  bigint  ] with { }
@@ -89,11 +89,11 @@ object ArithmeticType:
   given ArithmeticType[varint,   tinyint,  varint  ] with { }
   given ArithmeticType[varint,   smallint, varint  ] with { }
   given ArithmeticType[varint,   int,      varint  ] with { }
-  given ArithmeticType[varint,   bigint,   decimal ] with { }
+  given ArithmeticType[varint,   bigint,   varint  ] with { }
   given ArithmeticType[varint,   counter,  decimal ] with { }
   given ArithmeticType[varint,   float,    decimal ] with { }
   given ArithmeticType[varint,   double,   decimal ] with { }
-  given ArithmeticType[varint,   varint,   decimal ] with { }
+  given ArithmeticType[varint,   varint,   varint  ] with { }
   given ArithmeticType[varint,   decimal,  decimal ] with { }
 
   given ArithmeticType[decimal,  tinyint,  decimal ] with { }
