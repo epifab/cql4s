@@ -78,35 +78,35 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
         baseQuery
           .where(e => (e("id") === :?) and (e("venue") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE (id = ?) AND (venue = ?)"
+          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? AND venue = ?"
       }
 
       "id = ? or venue = ?" in {
         baseQuery
           .where(e => (e("id") === :?) or (e("venue") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE (id = ?) OR (venue = ?)"
+          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR venue = ?"
       }
 
-      "id = ? or venue = ? and start_time = ? !! DSL does not respect AND precedence" in {
+      "id = ? or venue = ? and start_time = ?" in {
         baseQuery
           .where(e => (e("id") === :?) or (e("venue") === :?) and e("start_time") === :?)
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE ((id = ?) OR (venue = ?)) AND (start_time = ?)"
+          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR venue = ? AND start_time = ?"
       }
 
       "id = ? or (venue = ? and start_time = ?)" in {
         baseQuery
-          .where(e => (e("id") === :?) or ((e("venue") === :?) and (e("start_time") === :?)))
+          .where(e => (e("id") === :?) or <<((e("venue") === :?) and (e("start_time") === :?)))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE (id = ?) OR ((venue = ?) AND (start_time = ?))"
+          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR (venue = ? AND start_time = ?)"
       }
 
       "(id = ? or venue = ?) and start_time = ?" in {
         baseQuery
-          .where(e => ((e("id") === :?) or (e("venue") === :?)) and (e("start_time") === :?))
+          .where(e => <<((e("id") === :?) or (e("venue") === :?)) and (e("start_time") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE ((id = ?) OR (venue = ?)) AND (start_time = ?)"
+          .cql shouldBe "SELECT 1 FROM music.events WHERE (id = ? OR venue = ?) AND start_time = ?"
       }
     }
 

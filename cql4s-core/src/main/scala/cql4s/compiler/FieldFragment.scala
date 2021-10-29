@@ -21,6 +21,9 @@ object FieldFragment:
   given cast[F <: Field[_], I <: Tuple, U](using inner: FieldFragment[F, I]): FieldFragment[Cast[F, U], I] with
     def build(cast: Cast[F, U]): CompiledFragment[I] = inner.build(cast.field).wrap("CAST(", s" AS ${cast.dataType.dbName})")
 
+  given wrap[T, F <: Field[T], I <: Tuple](using inner: FieldFragment[F, I]): FieldFragment[FieldWrap[T, F], I] with
+    def build(field: FieldWrap[T, F]): CompiledFragment[I] = inner.build(field.expr).wrap("(", ")")
+
   given dbFunction[FS <: Tuple, T, Output <: Tuple](
     using
     inner: ListFragment[FieldFragment, FS, Output]

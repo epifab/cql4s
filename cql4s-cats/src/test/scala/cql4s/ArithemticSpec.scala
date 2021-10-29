@@ -398,3 +398,10 @@ class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
       "decimal"  in testArithmetic(select.take(x => x("_decimal") / x("_decimal")).compile, 1)
     }
   }
+
+  "Complex expressions" - {
+    "a * b + c" in testArithmetic(select.take(x => x("_int") * x("_int") + x("_int")).compile, 1806)
+    "(a * b) + c" in testArithmetic(select.take(x => <<(x("_int") * x("_int")) + x("_int")).compile, 1806)
+    "a * (b + c)" in testArithmetic(select.take(x => x("_int") * <<(x("_int") + x("_int"))).compile, 3528)
+    "a * ((b + c) / d)" in testArithmetic(select.take { x => val i = x("_int"); i * <<(<<(i + i) / i) }.compile, 84)
+  }

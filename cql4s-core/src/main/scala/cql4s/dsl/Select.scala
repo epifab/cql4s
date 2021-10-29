@@ -23,6 +23,9 @@ class Select[Keyspace, TableName, TableColumns, Fields, Where <: LogicalExpr, Gr
   def where[NewWhere <: LogicalExpr](f: Selectable[TableColumns] => NewWhere): Select[Keyspace, TableName, TableColumns, Fields, NewWhere, GroupBy, OrderBy, Limit, PerPartitionLimit] =
     Select(table, fields, f(table), groupBy, orderBy, limit, perPartitionLimit, allowFiltering)
 
+  def andWhere[NewWhere <: LogicalExpr](f: Selectable[TableColumns] => NewWhere): Select[Keyspace, TableName, TableColumns, Fields, And[LogicalEpxrWrap[Where], LogicalEpxrWrap[NewWhere]], GroupBy, OrderBy, Limit, PerPartitionLimit] =
+    Select(table, fields, <<(where) and <<(f(table)), groupBy, orderBy, limit, perPartitionLimit, allowFiltering)
+
   def groupBy[NewGroupBy](f: Selectable[TableColumns] => NewGroupBy)(using NonEmptyListOfFields[NewGroupBy]): Select[Keyspace, TableName, TableColumns, Fields, Where, NewGroupBy, OrderBy, Limit, PerPartitionLimit] =
     Select(table, fields, where, f(table), orderBy, limit, perPartitionLimit, allowFiltering)
 

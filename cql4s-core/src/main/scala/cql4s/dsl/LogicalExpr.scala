@@ -1,25 +1,24 @@
 package cql4s.dsl
 
-sealed trait LogicalExpr:
-  def and[F2 <: LogicalExpr](otherExpression: F2): And[this.type, F2] = And(this, otherExpression)
-  def or[F2 <: LogicalExpr](otherExpression: F2): Or[this.type, F2] = Or(this, otherExpression)
+trait LogicalExpr:
+  def and[E2 <: LogicalExpr](otherExpression: E2): And[this.type, E2] = And(this, otherExpression)
+  def or[E2 <: LogicalExpr](otherExpression: E2): Or[this.type, E2] = Or(this, otherExpression)
 
 sealed trait AlwaysTrue extends LogicalExpr
-
 case object AlwaysTrue extends AlwaysTrue
 
-sealed trait LogicalExpr1[+F] extends LogicalExpr:
-  def expr: F
+sealed trait LogicalExpr1[+E] extends LogicalExpr:
+  def expr: E
 
-sealed trait LogicalExpr2[+F1, +F2] extends LogicalExpr:
-  def left: F1
-  def right: F2
+sealed trait LogicalExpr2[+E1, +E2] extends LogicalExpr:
+  def left: E1
+  def right: E2
 
-case class And[+F1 <: LogicalExpr, +F2 <: LogicalExpr](left: F1, right: F2)
-  extends LogicalExpr2[F1, F2]
+case class And[+E1 <: LogicalExpr, +E2 <: LogicalExpr](left: E1, right: E2)
+  extends LogicalExpr2[E1, E2]
 
-case class Or[+F1 <: LogicalExpr, +F2 <: LogicalExpr](left: F1, right: F2)
-  extends LogicalExpr2[F1, F2]
+case class Or[+E1 <: LogicalExpr, +E2 <: LogicalExpr](left: E1, right: E2)
+  extends LogicalExpr2[E1, E2]
 
 sealed trait Comparison[+F1 <: Field[_], +F2 <: Field[_]] extends LogicalExpr2[F1, F2]
 
