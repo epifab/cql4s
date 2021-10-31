@@ -119,12 +119,12 @@ Typically, you might want to extract away all your queries and commands.
 
 ```scala
 import cql4s.dsl.*
-import cql4s.Runtime
+import cql4s.CassandraRuntime
 
 import java.util.{Currency, UUID}
 import scala.util.chaining.*
 
-class EventsRepo[F[_], S[_]](using cassandra: Runtime[F, S]):
+class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
   val add: Event => F[Unit] =
     Insert
       .into(events)
