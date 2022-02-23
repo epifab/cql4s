@@ -59,6 +59,6 @@ object CassandraCatsRuntime:
   def apply[F[_]: Sync](config: CassandraConfig): Resource[F, CassandraCatsRuntime[F]] =
     Resource.make(
       Sync[F].blocking(
-        new CassandraCatsRuntime(config.getSession())
+        new CassandraCatsRuntime(config.unsafeGetSession())
       )
     )(runtime => Sync[F].blocking(runtime.session.close()))

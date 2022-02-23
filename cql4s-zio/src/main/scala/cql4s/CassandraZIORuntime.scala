@@ -50,6 +50,6 @@ object CassandraZIORuntime extends CassandraRuntime[[A] =>> ZIO[Has[CqlSession],
       execute(command.cql, CqlStatement(batchType, command)(rows)).map(_ => ())
 
   def session(config: CassandraConfig): ZLayer[Any, Throwable, Has[CqlSession]] = {
-    val acquire = ZIO.blocking(ZIO(config.getSession()))
+    val acquire = ZIO.blocking(ZIO(config.unsafeGetSession()))
     ZLayer.fromAcquireRelease(acquire)(session => URIO(session.close()))
   }

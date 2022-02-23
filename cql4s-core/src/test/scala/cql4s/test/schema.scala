@@ -76,6 +76,7 @@ object schema:
       "_tinyint" :=: tinyint,
       "_uuid" :=: uuid,
       "_varchar" :=: varchar,
-      "_varint" :=: varint
+      "_varint" :=: varint,
+      "_nullableint" :=: nullable[int]
     )
   ]

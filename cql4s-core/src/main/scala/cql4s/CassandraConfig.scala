@@ -14,7 +14,7 @@ case class CassandraConfig(
   keyspace: Option[String],
   datacenter: String
 ):
-  protected [cql4s] def getSession(): CqlSession =
+  protected [cql4s] def unsafeGetSession(): CqlSession =
     CqlSession.builder()
       .addContactPoint(new InetSocketAddress(host, port))
       .withLocalDatacenter(datacenter)
