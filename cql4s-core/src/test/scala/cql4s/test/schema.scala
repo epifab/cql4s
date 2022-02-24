@@ -49,34 +49,8 @@ object schema:
     )
   ]
 
-  object all_types extends Table[
+  object dummy extends Table[
     "test",
-    "all_types",
-    (
-      "id" :=: uuid,
-      "_ascii" :=: ascii,
-      "_bigint" :=: bigint,
-      "_blob" :=: blob,
-      "_boolean" :=: boolean,
-      // cannot mix counter and non-counter column ¯\_(ツ)_/¯
-      // "_counter" :=: counter,
-      "_date" :=: date,
-      "_decimal" :=: decimal,
-      "_double" :=: double,
-      // duration is not supported
-      // "_duration" :=: duration,
-      "_float" :=: float,
-      "_inet" :=: inet,
-      "_int" :=: int,
-      "_smallint" :=: smallint,
-      "_text" :=: text,
-      "_time" :=: time,
-      "_timestamp" :=: timestamp,
-      "_timeuuid" :=: timeuuid,
-      "_tinyint" :=: tinyint,
-      "_uuid" :=: uuid,
-      "_varchar" :=: varchar,
-      "_varint" :=: varint,
-      "_nullableint" :=: nullable[int]
-    )
+    "dummy",
+    "id" :=: uuid  // funny table with a single field
   ]

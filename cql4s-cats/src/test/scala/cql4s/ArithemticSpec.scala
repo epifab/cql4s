@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cql4s.dsl.*
 import cql4s.test.CassandraTestConfig
-import cql4s.test.schema.all_types
+import cql4s.test.schema.dummy
 import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -13,22 +13,9 @@ import java.util.UUID
 
 class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
-  val select = Select.from(all_types).where(_("id") === :?)
+  val select = Select.from(dummy).where(_("id") === :?)
 
-  val insert = Insert.into(all_types)
-    .fields { at => (
-      at("id"),
-      at("_tinyint"),
-      at("_smallint"),
-      at("_int"),
-      at("_bigint"),
-      at("_float"),
-      at("_double"),
-      at("_varint"),
-      at("_decimal"),
-    )}
-    .compile
-    .contramap((id: UUID) => (id, 42, 42, 42, 42, 42, 42, 42, 42))
+  val insert = Insert.into(dummy).fields(_("id")).compile
 
   private val tinyint42 = 42.toByte[tinyint]
   private val smallint42 = 42.toShort[smallint]
