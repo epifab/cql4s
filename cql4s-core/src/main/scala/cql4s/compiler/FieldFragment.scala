@@ -6,17 +6,12 @@ trait FieldFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
 
 object FieldFragment:
 
-  given column[Name, T]: FieldFragment[Column[Name, T], EmptyTuple] with
-    def build(field: Column[Name, T]): CompiledFragment[EmptyTuple] =
-      CompiledFragment(field.name.escaped)
-      
-  given placeholder[P <: Placeholder[_]]: FieldFragment[P, P *: EmptyTuple] with
-    def build(placeholder: P): CompiledFragment[P *: EmptyTuple] = 
-      CompiledFragment(List("?"), placeholder *: EmptyTuple)
+  given column[C, I <: Tuple](using builder: ColumnFragment[C, I]): FieldFragment[C, I] with
+    def build(column: C): CompiledFragment[I] = builder.build(column)
 
-  given const[P <: Const[_]]: FieldFragment[P, P *: EmptyTuple] with
-    def build(const: P): CompiledFragment[P *: EmptyTuple] =
-      CompiledFragment(List("?"), const *: EmptyTuple)
+  given input[P <: InputField[_]]: FieldFragment[P, P *: EmptyTuple] with
+    def build(field: P): CompiledFragment[P *: EmptyTuple] = 
+      CompiledFragment(List("?"), field *: EmptyTuple)
 
   given cast[F <: Field[_], I <: Tuple, U](using inner: FieldFragment[F, I]): FieldFragment[Cast[F, U], I] with
     def build(cast: Cast[F, U]): CompiledFragment[I] = inner.build(cast.field).wrap("CAST(", s" AS ${cast.dataType.dbName})")

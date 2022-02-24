@@ -1,6 +1,6 @@
 package cql4s.dsl
 
-final class Const[T](val dataType: DataType[T], val value: dataType.ScalaType) extends Field[T]:
+final class Const[T](val dataType: DataType[T], val value: dataType.ScalaType) extends InputField[T]:
   def encoded: dataType.JavaType = dataType.encode(value)
 
 extension[U](value: U)

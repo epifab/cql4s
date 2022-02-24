@@ -12,9 +12,9 @@ trait QueryFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
 object QueryFragment:
   given select[Keyspace, TableName, TableColumns, Fields, Output, Where <: LogicalExpr, GroupBy, OrderBy, Limit, PerPartitionLimit, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple, I4 <: Tuple, I5 <: Tuple, I6 <: Tuple] (
     using
-    fields: ListFragment[FieldFragment, Fields, I1],
+    fields: ListFragment[SelectorFragment, Fields, I1],
     where: LogicalExprFragment[Where, I2],
-    groupBy: ListFragment[FieldFragment, GroupBy, I3],
+    groupBy: ListFragment[ColumnFragment, GroupBy, I3],
     orderBy: ListFragment[OrderByFragment, OrderBy, I4],
     limit: OptionalInputFragment[Limit, I5],
     perPartitionLimit: OptionalInputFragment[PerPartitionLimit, I6]

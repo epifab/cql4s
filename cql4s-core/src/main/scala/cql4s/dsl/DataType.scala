@@ -25,7 +25,7 @@ trait DataType[-T]:
   def driverCodec: DriverTypeCodec[JavaType]
   def encode: ScalaType => JavaType
   def decode: JavaType => ScalaType
-  def dbName: String
+  def dbName: String = driverDataType.asCql(true, false)
 
   def map[U, NewScalaType](f: NewScalaType => ScalaType, g: ScalaType => NewScalaType): DataTypeCodec[U, JavaType, NewScalaType] =
     new DataTypeMap[U, JavaType, NewScalaType](driverDataType, driverCodec, dbName, encode.compose(f), g.compose(decode))
@@ -154,7 +154,6 @@ object DataType:
   given intCodec: DataType[int] with DataTypeImpl[int, java.lang.Integer, Int](identity, identity) with
     override val driverDataType: DriverDataType = DriverDataTypes.INT
     override val driverCodec: DriverTypeCodec[java.lang.Integer] = DriverTypeCodecs.INT
-    override val dbName: String = "int"
 
   given smallintCodec: DataType[smallint] with DataTypeImpl[smallint, java.lang.Short, Short](identity, identity) with
     override val driverDataType: DriverDataType = DriverDataTypes.SMALLINT
@@ -179,47 +178,38 @@ object DataType:
   given timeuuidCodec: DataType[timeuuid] with SimpleDataType[timeuuid, UUID] with
     override val driverDataType: DriverDataType = DriverDataTypes.TIMEUUID
     override val driverCodec: DriverTypeCodec[UUID] = DriverTypeCodecs.TIMEUUID
-    override val dbName: String = "timeuuid"
 
   given tinyintCodec: DataType[tinyint] with DataTypeImpl[tinyint, java.lang.Byte, Byte](identity, identity) with
     override val driverDataType: DriverDataType = DriverDataTypes.TINYINT
     override val driverCodec: DriverTypeCodec[java.lang.Byte] = DriverTypeCodecs.TINYINT
-    override val dbName: String = "tinyint"
 
   given uuidCodec: DataType[uuid] with SimpleDataType[uuid, UUID] with
     override val driverDataType: DriverDataType = DriverDataTypes.UUID
     override val driverCodec: DriverTypeCodec[UUID] = DriverTypeCodecs.UUID
-    override val dbName: String = "uuid"
 
   given varcharCodec: DataType[varchar] with SimpleDataType[varchar, String] with
     override val driverDataType: DriverDataType = DriverDataTypes.TEXT
     override val driverCodec: DriverTypeCodec[String] = DriverTypeCodecs.TEXT
-    override val dbName: String = "varchar"
 
   given varintCodec: DataType[varint] with DataTypeImpl[varint, java.math.BigInteger, BigInt](_.bigInteger, identity) with
     override val driverDataType: DriverDataType = DriverDataTypes.VARINT
     override val driverCodec: DriverTypeCodec[java.math.BigInteger] = DriverTypeCodecs.VARINT
-    override val dbName: String = "varint"
 
   given mapCodec[K, KJT, KST, V, VJT, VST](using key: DataTypeCodec[K, KJT, KST], value: DataTypeCodec[V, VJT, VST]): DataType[map[K, V]] with DataTypeImpl[map[K, V], java.util.Map[KJT, VJT], Map[KST, VST]](_.map { case (k, v) => key.encode(k) -> value.encode(v) }.asJava, _.asScala.map { case (k, v) => key.decode(k) -> value.decode(v) }.toMap) with
     override val driverDataType: DriverDataType = DriverDataTypes.mapOf(key.driverDataType, value.driverDataType)
     override val driverCodec: DriverTypeCodec[java.util.Map[KJT, VJT]] = DriverTypeCodecs.mapOf(key.driverCodec, value.driverCodec)
-    override val dbName: String = s"map<${key.dbName},${value.dbName}>"
 
   given listCodec[T, JT, ST](using nested: DataTypeCodec[T, JT, ST]): DataType[list[T]] with DataTypeImpl[list[T], java.util.List[JT], List[ST]](_.map(nested.encode).asJava, _.asScala.map(nested.decode).toList) with
     override val driverDataType: DriverDataType = DriverDataTypes.listOf(nested.driverDataType)
     override val driverCodec: DriverTypeCodec[java.util.List[JT]] = DriverTypeCodecs.listOf(nested.driverCodec)
-    override val dbName: String = s"list<${nested.dbName}>"
 
   given setCodec[T, JT, ST](using nested: DataTypeCodec[T, JT, ST]): DataType[set[T]] with DataTypeImpl[set[T], java.util.Set[JT], Set[ST]](_.map(nested.encode).asJava, _.asScala.map(nested.decode).toSet) with
     override val driverDataType: DriverDataType = DriverDataTypes.setOf(nested.driverDataType)
     override val driverCodec: DriverTypeCodec[java.util.Set[JT]] = DriverTypeCodecs.setOf(nested.driverCodec)
-    override val dbName: String = s"set<${nested.dbName}>"
 
   given nullableCodec[T, JT >: Null, ST](using nested: DataTypeCodec[T, JT, ST]): DataType[nullable[T]] with DataTypeImpl[nullable[T], JT, Option[ST]](s => s.map(nested.encode).orNull, j => Option(j).map(nested.decode)) with
     override val driverDataType: DriverDataType = nested.driverDataType
     override val driverCodec: DriverTypeCodec[JT] = nested.driverCodec
-    override val dbName: String = nested.dbName
 
   given rawUdtCodec[Keyspace, Name, Columns, Output] (
     using
@@ -251,8 +241,6 @@ object DataType:
             udtValue.set(index, value, (column.dataType.driverCodec.asInstanceOf[DriverTypeCodec[value.type]]))
         })
 
-    override val dbName: String = name.escaped
-
   given udtCodec[Keyspace, Name, Components, J >: Null, S <: Tuple, P <: Product](
     using
     dt: DataTypeCodec[udt.raw[Keyspace, Name, Components], J, S],
@@ -277,5 +265,3 @@ object DataType:
 
     override def decode: TupleValue => Output = tuple => decoder.decode(tuple)
     override def encode: Output => TupleValue = output => new DefaultTupleValue(driverDataType, encoder.encode(output): _*)
-
-    override val dbName: String = s"tuple<${codecs.toList.map(_.dbName).mkString(", ")}>"
