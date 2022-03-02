@@ -7,9 +7,11 @@ import com.datastax.oss.driver.api.core.cql.*
 import cql4s.dsl.*
 import cats.syntax.*
 import com.datastax.oss.driver.api.core.servererrors.{QueryExecutionException, QueryValidationException}
-import cql4s.{CassandraConfig, CassandraRuntime}
+import cql4s.{CassandraConfig, CassandraRuntimeAlgebra}
 
-class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extends CassandraRuntime[F, [A] =>> fs2.Stream[F, A]]:
+type CassandraCatsRuntimeInterpreter[F[_]] = CassandraRuntimeAlgebra[F, [A] =>> fs2.Stream[F, A]]
+
+class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extends CassandraCatsRuntimeInterpreter[F]:
 
   extension[A](fa: F[A])
     def remapErrors(cql: String): F[A] =
@@ -54,8 +56,6 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
 
 
 object CassandraCatsRuntime:
-  type Aux[F[_]] = CassandraRuntime[F, [A] =>> fs2.Stream[F, A]]
-
   def apply[F[_]: Sync](config: CassandraConfig): Resource[F, CassandraCatsRuntime[F]] =
     Resource.make(
       Sync[F].blocking(

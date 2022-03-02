@@ -16,9 +16,6 @@ import java.util.Currency
 
 class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
 
-  val ioRuntime = zio.Runtime.default
-  given CassandraZIORuntime.Aux = CassandraZIORuntime
-
   "Can insert / retrieve data" in {
     val program: ZIO[Has[CqlSession], Throwable, (Event, Option[Event])] = for {
       _ <- truncateEvents.execute(())
@@ -33,7 +30,7 @@ class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
       deletedEvent <- findEventById.option(event1.id)
     } yield (updatedEvent, deletedEvent)
 
-    ioRuntime.unsafeRun(program.provideLayer(CassandraZIORuntime.session(CassandraTestConfig))) shouldBe (
+    zio.Runtime.default.unsafeRun(program.provideLayer(CassandraZLayer(CassandraTestConfig))) shouldBe (
       event1.copy(
         tickets = Map(Currency.getInstance("USD") -> 32),
         metadata = event1.metadata.copy(updatedAt = Some(now))

@@ -7,8 +7,15 @@ import cql4s.dsl.{Command, Query}
 import zio.stream.ZStream
 import zio.{Has, URIO, ZIO, ZLayer}
 
-object CassandraZIORuntime extends CassandraRuntime[[A] =>> ZIO[Has[CqlSession], CassandraException, A], [A] =>> ZStream[Has[CqlSession], CassandraException, A]]:
-  type Aux = CassandraRuntime[[A] =>> ZIO[Has[CqlSession], CassandraException, A], [A] =>> ZStream[Has[CqlSession], CassandraException, A]]
+type CassandraZIORuntimeInterpreter =
+  CassandraRuntimeAlgebra[
+    [A] =>> ZIO[Has[CqlSession], CassandraException, A],
+    [A] =>> ZStream[Has[CqlSession], CassandraException, A]
+  ]
+
+given cassandraZIORuntimeInterpreter: CassandraZIORuntimeInterpreter = CassandraZIORuntime
+
+object CassandraZIORuntime extends CassandraZIORuntimeInterpreter:
 
   private def execute[T <: Statement[T]](cql: String, statement: Statement[T]): ZIO[Has[CqlSession], CassandraException, ResultSet] =
     for {
@@ -49,7 +56,9 @@ object CassandraZIORuntime extends CassandraRuntime[[A] =>> ZIO[Has[CqlSession],
     (rows: Iterable[Input]) =>
       execute(command.cql, CqlStatement(batchType, command)(rows)).map(_ => ())
 
-  def session(config: CassandraConfig): ZLayer[Any, Throwable, Has[CqlSession]] = {
+
+object CassandraZLayer:
+  def apply(config: CassandraConfig): ZLayer[Any, Throwable, Has[CqlSession]] = {
     val acquire = ZIO.blocking(ZIO(config.unsafeGetSession()))
     ZLayer.fromAcquireRelease(acquire)(session => URIO(session.close()))
   }

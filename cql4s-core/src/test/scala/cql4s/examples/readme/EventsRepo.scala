@@ -1,12 +1,12 @@
 package cql4s.examples.readme
 
-import cql4s.CassandraRuntime
+import cql4s.CassandraRuntimeAlgebra
 import cql4s.dsl.*
 
 import java.util.{Currency, UUID}
 import scala.util.chaining.*
 
-class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
+class EventsRepo[F[_], S[_]](using CassandraRuntimeAlgebra[F, S]):
   val add: Event => F[Unit] =
     Insert
       .into(events)

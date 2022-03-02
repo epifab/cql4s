@@ -118,13 +118,13 @@ object events extends Table[
 Typically, you might want to extract away all your queries and commands.
 
 ```scala
+import cql4s.CassandraRuntimeAlgebra
 import cql4s.dsl.*
-import cql4s.CassandraRuntime
 
 import java.util.{Currency, UUID}
 import scala.util.chaining.*
 
-class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
+class EventsRepo[F[_], S[_]](using CassandraRuntimeAlgebra[F, S]):
   val add: Event => F[Unit] =
     Insert
       .into(events)
@@ -150,9 +150,9 @@ class EventsRepo[F[_], S[_]](using cassandra: CassandraRuntime[F, S]):
       .stream
 ```
 
-#### The app
+#### The app (typelevel example)
 
-Following, is an example of an application running on the typelevel stack.
+Here's what the application might look like in cats effect/fs2 land:
 
 ```scala
 import cats.effect.{ExitCode, IO, IOApp}
@@ -194,6 +194,51 @@ object Program extends IOApp:
       }
 ```
 
+#### The app (ZIO example)
+
+Here's what the application might look like in ZIO land:
+
+```scala
+import cql4s.{CassandraConfig, CassandraZIORuntime, CassandraZLayer}
+import zio.{ZIO, ZIOAppArgs, ZIOAppDefault}
+
+import java.time.Instant
+import java.util.{Currency, UUID}
+
+object Program extends ZIOAppDefault:
+  val cassandraLayer = CassandraZLayer(CassandraConfig(
+    "0.0.0.0",
+    9042,
+    credentials = None,
+    keyspace = None,
+    datacenter = "testdc"
+  ))
+
+  val app = for {
+    args <- ZIO.service[ZIOAppArgs]
+    repo = new EventsRepo(using CassandraZIORuntime)
+    result <- repo
+      .findByIds(args.getArgs.toList.map(UUID.fromString))
+      // Update existing event price
+      .tap(e => repo.updateTickets(
+        Map(Currency.getInstance("GBP") -> 49.99),
+        e.metadata.copy(updatedAt = Some(Instant.now)),
+        e.id
+      ))
+      // Create a new event with same artists on a different day
+      .tap(e => repo.add(
+        e.copy(
+          id = UUID.randomUUID(),
+          startTime = Instant.parse("2022-03-08T20:30:00Z"),
+          metadata = e.metadata.copy(createdAt = Instant.now, updatedAt = None)
+        )
+      ))
+      .runDrain
+  } yield ()
+  
+  val run = app.provideSomeLayer(cassandraLayer)
+```
+
 ## Support
 
 Find out all supported feature [here](SUPPORT.md).
@@ -215,7 +260,7 @@ For the typelevel stack:
 ```scala
 libraryDependencies ++= Seq(
     "com.github.epifab.cql4s" %% "cql4s-core",
-    "com.github.epifab.cql4s" %% "cql4s-cats",
+    "com.github.epifab.cql4s" %% "cql4s-cats"
 ).map(_ % Version)
 ```
 
@@ -224,8 +269,14 @@ For ZIO:
 ```scala
 libraryDependencies ++= Seq(
     "com.github.epifab.cql4s" %% "cql4s-core",
-    "com.github.epifab.cql4s" %% "cql4s-zio",
+    "com.github.epifab.cql4s" %% "cql4s-zio"
 ).map(_ % Version)
+```
+
+Optional: JSON support using circe
+
+```scala
+libraryDependencies += "com.github.epifab.cql4s" %% "cql4s-circe" % Version
 ```
 
 
