@@ -214,10 +214,10 @@ object Program extends ZIOAppDefault:
     datacenter = "testdc"
   ))
 
-  val app = for {
-    args <- ZIO.service[ZIOAppArgs]
-    repo = new EventsRepo(using CassandraZIORuntime)
-    result <- repo
+  val repo = new EventsRepo(using CassandraZIORuntime)
+
+  val app = ZIO.service[ZIOAppArgs].flatMap(args =>
+    repo
       .findByIds(args.getArgs.toList.map(UUID.fromString))
       // Update existing event price
       .tap(e => repo.updateTickets(
@@ -234,7 +234,7 @@ object Program extends ZIOAppDefault:
         )
       ))
       .runDrain
-  } yield ()
+  )
   
   val run = app.provideSomeLayer(cassandraLayer)
 ```
