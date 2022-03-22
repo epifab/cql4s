@@ -41,4 +41,4 @@ object QueryCompiler:
   ): QueryCompiler[S, Input, Output] with
     def build(select: S): Query[Input, Output] =
       val fragment = queryFragment.build(select)
-      Query(fragment.cql, encoder(fragment.input), decoder)
+      Query(fragment.cql, encoder(fragment.input), decoder, None)

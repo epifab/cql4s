@@ -5,9 +5,9 @@ import cats.effect.unsafe.IORuntime
 import cql4s.dsl.*
 import cql4s.test.CassandraTestConfig
 import cql4s.test.schema.dummy
-import org.scalatest.{Assertion, BeforeAndAfterAll}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.Assertion
 
 import java.util.UUID
 
@@ -28,10 +28,10 @@ class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   def testArithmetic[A](query: Query[UUID, A], result: A): Assertion =
     (for {
-      c  <- cassandra
+      given _ <- cassandra
       id <- IO(UUID.randomUUID())
-      _  <- c.execute(insert)(id)
-      x  <- c.one(query)(id)
+      _  <- insert.execute(id)
+      x  <- query.one(id)
     } yield (x shouldBe result)).unsafeRunSync()
 
   "Add" - {

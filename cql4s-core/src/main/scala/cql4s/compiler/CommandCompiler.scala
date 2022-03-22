@@ -62,4 +62,4 @@ object CommandCompiler:
   ): CommandCompiler[C, Input] with
     def build(command: C): Command[Input] =
       val fragment = commandFragment.build(command)
-      Command(fragment.cql, encoder(fragment.input))
+      Command(fragment.cql, encoder(fragment.input), None)

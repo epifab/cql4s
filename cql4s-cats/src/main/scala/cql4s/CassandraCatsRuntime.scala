@@ -1,12 +1,11 @@
 package cql4s
 
-import cats.Applicative.ops.toAllApplicativeOps
 import cats.effect.kernel.{Resource, Sync}
-import com.datastax.oss.driver.api.core.{AllNodesFailedException, CqlSession}
+import cats.syntax.functor.toFunctorOps
 import com.datastax.oss.driver.api.core.cql.*
-import cql4s.dsl.*
-import cats.syntax.*
 import com.datastax.oss.driver.api.core.servererrors.{QueryExecutionException, QueryValidationException}
+import com.datastax.oss.driver.api.core.{AllNodesFailedException, CqlSession}
+import cql4s.dsl.*
 import cql4s.{CassandraConfig, CassandraRuntimeAlgebra}
 
 type CassandraCatsRuntimeInterpreter[F[_]] = CassandraRuntimeAlgebra[F, [A] =>> fs2.Stream[F, A]]
@@ -52,7 +51,7 @@ class CassandraCatsRuntime[F[_]: Sync](protected val session: CqlSession) extend
 
   override def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => F[Unit] =
     (rows: Iterable[Input]) =>
-      execute(CqlStatement(batchType, command)(rows)).remapErrors(command.cql).void
+      execute(CqlStatement(command, batchType)(rows)).remapErrors(command.cql).void
 
 
 object CassandraCatsRuntime:

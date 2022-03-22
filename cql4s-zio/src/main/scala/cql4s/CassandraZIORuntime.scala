@@ -54,7 +54,7 @@ object CassandraZIORuntime extends CassandraZIORuntimeInterpreter:
 
   override def executeBatch[Input](command: Command[Input], batchType: BatchType): Iterable[Input] => ZIO[Has[CqlSession], CassandraException, Unit] =
     (rows: Iterable[Input]) =>
-      execute(command.cql, CqlStatement(batchType, command)(rows)).map(_ => ())
+      execute(command.cql, CqlStatement(command, batchType)(rows)).map(_ => ())
 
 
 object CassandraZLayer:

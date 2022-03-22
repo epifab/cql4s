@@ -20,9 +20,9 @@ class NullableIntSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   "Storing and retrieving a nullable integer" in {
     (for {
-      c <- cassandra
+      given _ <- cassandra
       id <- IO(UUID.randomUUID())
-      _ <- c.execute(insert)(id)
-      x <- c.one(select)(id)
+      _ <- insert.execute(id)
+      x <- select.one(id)
     } yield x shouldBe None).unsafeRunSync()
   }

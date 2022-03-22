@@ -1,5 +1,6 @@
 package cql4s.examples.readme
 
+import com.datastax.oss.driver.api.core.ConsistencyLevel
 import cql4s.CassandraRuntimeAlgebra
 import cql4s.dsl.*
 
