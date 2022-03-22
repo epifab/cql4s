@@ -1,5 +1,7 @@
 package cql4s.dsl
 
+import cql4s.dsl.props.{AreComparable, CanContain, IsNumerical}
+
 trait Field[T]:
   given dataType: DataType[T]
 

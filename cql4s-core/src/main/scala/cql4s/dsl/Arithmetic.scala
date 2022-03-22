@@ -1,5 +1,7 @@
 package cql4s.dsl
 
+import cql4s.dsl.props.IsNumerical
+
 trait ArithmeticType[A, B, C]
 
 object ArithmeticType:

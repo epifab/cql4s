@@ -1,5 +1,7 @@
 package cql4s.dsl
 
+import cql4s.dsl.props.{AreComparable, CanContain}
+
 trait LogicalExpr:
   def and[E2 <: LogicalExpr](otherExpression: E2): And[this.type, E2] = And(this, otherExpression)
   def or[E2 <: LogicalExpr](otherExpression: E2): Or[this.type, E2] = Or(this, otherExpression)

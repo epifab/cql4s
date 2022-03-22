@@ -1,5 +1,7 @@
 package cql4s.dsl
 
+import cql4s.dsl.props.AreComparable
+
 // Column assignments for insert and update commands
 case class Assignment[+C <: Column[_, _], +Value <: Field[_]](val column: C, val value: Value)(using AreComparable[C, Value])
 
