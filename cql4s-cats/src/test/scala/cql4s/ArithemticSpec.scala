@@ -13,9 +13,7 @@ import java.util.UUID
 
 class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
-  val select = Select.from(dummy).where(_("id") === :?)
-
-  val insert = Insert.into(dummy).fields(_("id")).compile
+  import DummyFixture.*
 
   private val tinyint42 = 42.toByte[tinyint]
   private val smallint42 = 42.toShort[smallint]

@@ -19,6 +19,7 @@ object CommandFragment:
 
   given insert[Keyspace, TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple](
     using
+    // todo: should be NonEmptyListFragment
     fields: ListFragment[KeyFragment, KeyValues, A],
     values: ListFragment[ValueFragment, KeyValues, B]
   ): CommandFragment[Insert[Keyspace, TableName, TableColumns, KeyValues], A Concat B] with
@@ -31,6 +32,7 @@ object CommandFragment:
 
   given update[Keyspace, TableName, TableColumns, KeyValues, Where <: LogicalExpr, A <: Tuple, B <: Tuple](
     using
+    // todo: should be NonEmptyListFragment
     keyValues: ListFragment[KeyValueFragment, KeyValues, A],
     where: LogicalExprFragment[Where, B]
   ): CommandFragment[Update[Keyspace, TableName, TableColumns, KeyValues, Where], A Concat B] with
@@ -38,7 +40,7 @@ object CommandFragment:
       CompiledFragment(s"UPDATE ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
         updateParameters(command.updateParameters) ++
         keyValues.build(command.keyValues, ", ").prepend("SET ") ++
-        where.build(command.where).prepend("WHERE ")
+        where.build(command.where).prependOpt("WHERE ")
 
   given delete[Keysapce, TableName, TableColumns, Where <: LogicalExpr, A <: Tuple](
     using
@@ -47,7 +49,7 @@ object CommandFragment:
     def build(command: Delete[Keysapce, TableName, TableColumns, Where]): CompiledFragment[A] =
       CompiledFragment(s"DELETE FROM ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
         updateParameters(command.updateParameters) ++
-        where.build(command.where).prepend("WHERE ")
+        where.build(command.where).prependOpt("WHERE ")
 
   given truncate[Keyspace, TableName, TableColumns]: CommandFragment[Truncate[Keyspace, TableName, TableColumns], EmptyTuple] with
     def build(command: Truncate[Keyspace, TableName, TableColumns]): CompiledFragment[EmptyTuple] =

@@ -12,4 +12,4 @@ object KeyValueFragment:
     keyFragment: KeyFragment[K ~~> V, A],
     valueFragment: ValueFragment[K ~~> V, B]
   ): KeyValueFragment[K ~~> V, A Concat B] with
-    def build(x: K ~~> V): CompiledFragment[A Concat B] = keyFragment.build(x).concatenateRequired(valueFragment.build(x), " = ")
+    def build(x: K ~~> V): CompiledFragment[A Concat B] = keyFragment.build(x).concatenate(valueFragment.build(x), " = ")

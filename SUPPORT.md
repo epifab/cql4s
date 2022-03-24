@@ -64,10 +64,11 @@
 - `-` (_not supported_)
 
 ### [Datetime functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#datetime-functions)
-- currentTimestamp (_not supported_)
-- currentDate (_not supported_)
-- currentTime (_not supported_)
-- currentTimeUUID (_not supported_)
+- currentTimestamp
+- currentDate
+- currentTime
+- currentTimeUUID, now
+- minTimeuuid, maxTimeuuid
 
 ### [Time conversion functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#time-conversion-functions)
 - toDate (_not supported_)

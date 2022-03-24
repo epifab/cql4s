@@ -22,13 +22,13 @@ object QueryFragment:
     def build(select: Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, OrderBy, Limit, PerPartitionLimit]): CompiledFragment[I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] =
       fields
         .build(select.fields, ", ")
-        .orElse("1")
+        .orElse("(int)1")
         .wrap("SELECT ", s" FROM ${select.table.keyspace.escaped}.${select.table.name.escaped}") ++
-        where.build(select.where).prepend("WHERE ") ++
-        groupBy.build(select.groupBy, ", ").prepend("GROUP BY ") ++
-        orderBy.build(select.orderBy, ", ").prepend("ORDER BY ") ++
-        limit.build(select.limit).prepend("LIMIT ") ++
-        perPartitionLimit.build(select.perPartitionLimit).prepend("PER PARTITION LIMIT ") ++
+        where.build(select.where).prependOpt("WHERE ") ++
+        groupBy.build(select.groupBy, ", ").prependOpt("GROUP BY ") ++
+        orderBy.build(select.orderBy, ", ").prependOpt("ORDER BY ") ++
+        limit.build(select.limit).prependOpt("LIMIT ") ++
+        perPartitionLimit.build(select.perPartitionLimit).prependOpt("PER PARTITION LIMIT ") ++
         Option.when(select.allowFiltering)("ALLOW FILTERING")
 
 

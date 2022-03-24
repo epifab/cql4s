@@ -42,7 +42,7 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
     "nothing" in {
       baseQuery
         .compile
-        .cql shouldBe "SELECT 1 FROM music.events"
+        .cql shouldBe "SELECT (int)1 FROM music.events"
     }
 
     "one field" in {
@@ -50,6 +50,13 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
         .take(_("id"))
         .compile
         .cql shouldBe "SELECT id FROM music.events"
+    }
+
+    "now()" in {
+      baseQuery
+        .take(_ => functions.now())
+        .compile
+        .cql shouldBe "SELECT now() FROM music.events"
     }
 
     "two fields" in {
@@ -64,49 +71,49 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
         baseQuery
           .where(_("id") === :?)
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ?"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = ?"
       }
 
       "id = id" in {
         baseQuery
           .where(e => e("id") === e("id"))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = id"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = id"
       }
 
       "id = ? and venue = ?" in {
         baseQuery
           .where(e => (e("id") === :?) and (e("venue") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? AND venue = ?"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = ? AND venue = ?"
       }
 
       "id = ? or venue = ?" in {
         baseQuery
           .where(e => (e("id") === :?) or (e("venue") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR venue = ?"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = ? OR venue = ?"
       }
 
       "id = ? or venue = ? and start_time = ?" in {
         baseQuery
           .where(e => (e("id") === :?) or (e("venue") === :?) and e("start_time") === :?)
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR venue = ? AND start_time = ?"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = ? OR venue = ? AND start_time = ?"
       }
 
       "id = ? or (venue = ? and start_time = ?)" in {
         baseQuery
           .where(e => (e("id") === :?) or <<((e("venue") === :?) and (e("start_time") === :?)))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE id = ? OR (venue = ? AND start_time = ?)"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE id = ? OR (venue = ? AND start_time = ?)"
       }
 
       "(id = ? or venue = ?) and start_time = ?" in {
         baseQuery
           .where(e => <<((e("id") === :?) or (e("venue") === :?)) and (e("start_time") === :?))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events WHERE (id = ? OR venue = ?) AND start_time = ?"
+          .cql shouldBe "SELECT (int)1 FROM music.events WHERE (id = ? OR venue = ?) AND start_time = ?"
       }
     }
 
@@ -115,14 +122,14 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
         baseQuery
           .groupBy(_("venue"))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events GROUP BY venue"
+          .cql shouldBe "SELECT (int)1 FROM music.events GROUP BY venue"
       }
 
       "2 fields" in {
         baseQuery
           .groupBy(x => (x("venue"), x("tickets")))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events GROUP BY venue, tickets"
+          .cql shouldBe "SELECT (int)1 FROM music.events GROUP BY venue, tickets"
       }
     }
 
@@ -131,28 +138,28 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
         baseQuery
           .orderBy(_("start_time"))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events ORDER BY start_time"
+          .cql shouldBe "SELECT (int)1 FROM music.events ORDER BY start_time"
       }
 
       "one field (ascending)" in {
         baseQuery
           .orderBy(_("start_time").asc)
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events ORDER BY start_time ASC"
+          .cql shouldBe "SELECT (int)1 FROM music.events ORDER BY start_time ASC"
       }
 
       "one field (descending)" in {
         baseQuery
           .orderBy(_("start_time").desc)
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events ORDER BY start_time DESC"
+          .cql shouldBe "SELECT (int)1 FROM music.events ORDER BY start_time DESC"
       }
 
       "two fields" in {
         baseQuery
           .orderBy(e => (e("start_time").desc, e("venue")))
           .compile
-          .cql shouldBe "SELECT 1 FROM music.events ORDER BY start_time DESC, venue"
+          .cql shouldBe "SELECT (int)1 FROM music.events ORDER BY start_time DESC, venue"
       }
     }
 
@@ -160,13 +167,13 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
       baseQuery
         .limit(10L[bigint])
         .compile
-        .cql shouldBe "SELECT 1 FROM music.events LIMIT ?"
+        .cql shouldBe "SELECT (int)1 FROM music.events LIMIT ?"
     }
 
     "per partition limit" in {
       baseQuery
         .perPartitionLimit(10L[bigint])
         .compile
-        .cql shouldBe "SELECT 1 FROM music.events PER PARTITION LIMIT ?"
+        .cql shouldBe "SELECT (int)1 FROM music.events PER PARTITION LIMIT ?"
     }
   }

@@ -17,7 +17,7 @@ object ListFragment:
     tailCompier: ListFragment[BaseCompiler, TailInput, TailOutput]
   ): ListFragment[BaseCompiler, HeadInput *: TailInput, HeadOutput Concat TailOutput] with
     def build(tuple: HeadInput *: TailInput, separation: String): CompiledFragment[HeadOutput Concat TailOutput] =
-      headCompiler.build(tuple.head).concatenateOptional(tailCompier.build(tuple.tail, separation), separation)
+      headCompiler.build(tuple.head).concatenateOpt(tailCompier.build(tuple.tail, separation), separation)
 
   given single[X, XO <: Tuple, BaseCompiler[a, b <: Tuple] <: FragmentCompiler[a, b]] (
     using
