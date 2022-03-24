@@ -12,7 +12,7 @@ trait QueryFragment[-T, I <: Tuple] extends FragmentCompiler[T, I]
 object QueryFragment:
   given select[Keyspace, TableName, TableColumns, Fields, Output, Where <: LogicalExpr, GroupBy, OrderBy, Limit, PerPartitionLimit, I1 <: Tuple, I2 <: Tuple, I3 <: Tuple, I4 <: Tuple, I5 <: Tuple, I6 <: Tuple] (
     using
-    fields: ListFragment[SelectorFragment, Fields, I1],
+    fields: NonEmptyListFragment[SelectorFragment, Fields, I1],
     where: LogicalExprFragment[Where, I2],
     groupBy: ListFragment[ColumnFragment, GroupBy, I3],
     orderBy: ListFragment[OrderByFragment, OrderBy, I4],
@@ -20,10 +20,9 @@ object QueryFragment:
     perPartitionLimit: OptionalInputFragment[PerPartitionLimit, I6]
   ): QueryFragment[Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, OrderBy, Limit, PerPartitionLimit], I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] with
     def build(select: Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, OrderBy, Limit, PerPartitionLimit]): CompiledFragment[I1 Concat I2 Concat I3 Concat I4 Concat I5 Concat I6] =
-      fields
-        .build(select.fields, ", ")
-        .orElse("(int)1")
-        .wrap("SELECT ", s" FROM ${select.table.keyspace.escaped}.${select.table.name.escaped}") ++
+      CompiledFragment("SELECT") ++
+        fields.build(select.fields, ", ") ++
+        s"FROM ${select.table.keyspace.escaped}.${select.table.name.escaped}" ++
         where.build(select.where).prependOpt("WHERE ") ++
         groupBy.build(select.groupBy, ", ").prependOpt("GROUP BY ") ++
         orderBy.build(select.orderBy, ", ").prependOpt("ORDER BY ") ++

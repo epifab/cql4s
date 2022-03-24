@@ -19,9 +19,8 @@ object CommandFragment:
 
   given insert[Keyspace, TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple](
     using
-    // todo: should be NonEmptyListFragment
-    fields: ListFragment[KeyFragment, KeyValues, A],
-    values: ListFragment[ValueFragment, KeyValues, B]
+    fields: NonEmptyListFragment[KeyFragment, KeyValues, A],
+    values: NonEmptyListFragment[ValueFragment, KeyValues, B]
   ): CommandFragment[Insert[Keyspace, TableName, TableColumns, KeyValues], A Concat B] with
     def build(command: Insert[Keyspace, TableName, TableColumns, KeyValues]): CompiledFragment[A Concat B] = {
       CompiledFragment(s"INSERT INTO ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
@@ -32,8 +31,7 @@ object CommandFragment:
 
   given update[Keyspace, TableName, TableColumns, KeyValues, Where <: LogicalExpr, A <: Tuple, B <: Tuple](
     using
-    // todo: should be NonEmptyListFragment
-    keyValues: ListFragment[KeyValueFragment, KeyValues, A],
+    keyValues: NonEmptyListFragment[KeyValueFragment, KeyValues, A],
     where: LogicalExprFragment[Where, B]
   ): CommandFragment[Update[Keyspace, TableName, TableColumns, KeyValues, Where], A Concat B] with
     def build(command: Update[Keyspace, TableName, TableColumns, KeyValues, Where]): CompiledFragment[A Concat B] =
