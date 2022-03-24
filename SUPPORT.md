@@ -45,8 +45,6 @@
 - [cast](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#cast)
 - [token](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#token) (_not supported_)
 - [uuid](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#uuid) (_not supported_)
-- [now](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#now) (_not supported_)
-- [minTimeuuid, maxTimeuuid](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#mintimeuuid-and-maxtimeuuid) (_not supported_)
 - [asBlob](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#blob-conversion-functions) (_not supported_)
 - [user defined functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#user-defined-scalar-functions) (_not supported_)
 
@@ -71,11 +69,9 @@
 - minTimeuuid, maxTimeuuid
 
 ### [Time conversion functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#time-conversion-functions)
-- toDate (_not supported_)
-- toTimestamp (_not supported_)
-- toUnixTimestamp (_not supported_)
-- dateOf (_not supported_)
-- unixTimestampOf (_not supported_)
+- toDate
+- toTimestamp
+- toUnixTimestamp
 
 ### [Aggregate functions](https://cassandra.apache.org/doc/4.0/cassandra/cql/functions.html#aggregate-functions)
 - count (_not supported_)
