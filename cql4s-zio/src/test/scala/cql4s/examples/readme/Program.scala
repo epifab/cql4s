@@ -1,7 +1,7 @@
 package cql4s.examples.readme
 
 import cql4s.{CassandraConfig, CassandraZIORuntime, CassandraZLayer}
-import zio.{Has, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{ZIO, ZIOAppArgs, ZIOAppDefault}
 
 import java.time.Instant
 import java.util.{Currency, UUID}

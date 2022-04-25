@@ -1,4 +1,4 @@
-val scala3Version = "3.0.2"
+val scala3Version = "3.1.1"
 
 Global / version           := "SNAPSHOT"
 Global / organization      := "solutions.epifab"
@@ -9,15 +9,15 @@ Global / licenses          += ("MIT", url("https://opensource.org/licenses/MIT")
 Global / fork              := true
 Global / scalaVersion      := scala3Version
 
-val scalaTestVersion     = "3.2.9"
+val scalaTestVersion     = "3.2.11"
 val circeVersion         = "0.14.1"
-val fs2Version           = "3.1.6"
-val catsVersion          = "2.6.1"
-val catsEffectVersion    = "3.2.9"
-val zioVersion           = "2.0.0-M4"
+val fs2Version           = "3.2.7"
+val catsVersion          = "2.7.0"
+val catsEffectVersion    = "3.3.11"
+val zioVersion           = "2.0.0-RC5"
 
 val commonDependencies = Seq(
-  "com.datastax.oss" % "java-driver-core" % "4.13.0",
+  "com.datastax.oss" % "java-driver-core" % "4.14.0",
   "org.scalactic" %% "scalactic" % scalaTestVersion % Test,
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 )

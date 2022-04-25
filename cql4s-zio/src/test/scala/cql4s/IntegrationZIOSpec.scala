@@ -9,7 +9,7 @@ import cql4s.test.model.*
 import cql4s.test.queries.*
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
-import zio.{Has, ZIO, ZLayer}
+import zio.{ZIO, ZLayer}
 import zio.stream.ZSink
 
 import java.util.Currency
@@ -17,12 +17,12 @@ import java.util.Currency
 class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
 
   "Can insert / retrieve data" in {
-    val program: ZIO[Has[CqlSession], Throwable, (Event, Option[Event])] = for {
+    val program: ZIO[CqlSession, Throwable, (Event, Option[Event])] = for {
       _ <- truncateEvents.execute(())
       _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
       _ <- findEventsById.stream(List(event1.id, event2.id)).tap(e => updateEventTickets.execute((
         Map(Currency.getInstance("USD") -> 32),
-        e.metadata.copy(updatedAt = Some(now)),
+        e.metadata.copy(updatedAt = Some(atSomePoint)),
         e.id
       ))).runDrain
       updatedEvent <- findEventById.one(event1.id)
@@ -30,10 +30,12 @@ class IntegrationZIOSpec extends AnyFreeSpec with Matchers:
       deletedEvent <- findEventById.option(event1.id)
     } yield (updatedEvent, deletedEvent)
 
-    zio.Runtime.default.unsafeRun(program.provideLayer(CassandraZLayer(CassandraTestConfig))) shouldBe (
+    val result = ZIO.scoped(program.provideLayer(CassandraZLayer(CassandraTestConfig)))
+
+    zio.Runtime.default.unsafeRun(result) shouldBe (
       event1.copy(
         tickets = Map(Currency.getInstance("USD") -> 32),
-        metadata = event1.metadata.copy(updatedAt = Some(now))
+        metadata = event1.metadata.copy(updatedAt = Some(atSomePoint))
       ),
       None
     )

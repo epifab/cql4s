@@ -2,7 +2,6 @@ package cql4s
 
 import cats.effect.IO
 import cql4s.dsl.*
-import cql4s.dsl.functions.*
 import org.scalatest.Assertion
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers

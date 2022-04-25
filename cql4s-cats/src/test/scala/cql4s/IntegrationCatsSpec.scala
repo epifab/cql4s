@@ -24,7 +24,7 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers with CassandraAware:
         _ <- insertEvent.executeBatch(BatchType.LOGGED)(List(event1, event2))
         _ <- findEventsById.stream(List(event1.id, event2.id)).evalTap(e => updateEventTickets.execute((
           Map(Currency.getInstance("USD") -> 32),
-          e.metadata.copy(updatedAt = Some(now)),
+          e.metadata.copy(updatedAt = Some(atSomePoint)),
           e.id
         ))).compile.drain
         updatedEvent <- findEventById.one(event1.id)
@@ -35,7 +35,7 @@ class IntegrationCatsSpec extends AnyFreeSpec with Matchers with CassandraAware:
     result.unsafeRunSync() shouldBe (
       event1.copy(
         tickets = Map(Currency.getInstance("USD") -> 32),
-        metadata = event1.metadata.copy(updatedAt = Some(now))
+        metadata = event1.metadata.copy(updatedAt = Some(atSomePoint))
       ),
       None
     )

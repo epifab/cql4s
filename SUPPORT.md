@@ -74,7 +74,7 @@
 - toUnixTimestamp
 
 ### [Aggregate functions](https://cassandra.apache.org/doc/4.0/cassandra/cql/functions.html#aggregate-functions)
-- count (_not supported_)
+- count
 - sum (_not supported_)
 - max (_not supported_)
 - min (_not supported_)

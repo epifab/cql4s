@@ -49,7 +49,7 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
 
     "now()" in {
       baseQuery
-        .take(_ => functions.now())
+        .take(_ => now())
         .compile
         .cql shouldBe "SELECT now() FROM music.events"
     }

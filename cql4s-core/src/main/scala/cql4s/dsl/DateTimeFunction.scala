@@ -1,5 +1,4 @@
 package cql4s.dsl
-package functions
 
 import cql4s.dsl.props.IsType
 

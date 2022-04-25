@@ -27,3 +27,7 @@ object FieldFragment:
       func match
         case f: DbFunction2[_, _, _] if f.infixNotation => inner.build(func.params, s" ${func.dbName} ")
         case _ => inner.build(func.params, ", ").wrap(s"${func.dbName}(", ")")
+
+  given unsafeField[T, F <: UnsafeField[T]]: FieldFragment[F, EmptyTuple] with
+    def build(f: F): CompiledFragment[EmptyTuple] =
+      CompiledFragment(List(f.plainCql), EmptyTuple)
