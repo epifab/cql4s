@@ -35,5 +35,27 @@ CREATE KEYSPACE test WITH REPLICATION = {
 };
 
 CREATE TABLE test.dummy (
-    id uuid primary key
+    id uuid primary key,
+    "_ascii" ascii,
+    "_bigint" bigint,
+    "_blob" blob,
+    "_boolean" boolean,
+    -- "_counter" counter,
+    "_date" date,
+    "_decimal" decimal,
+    "_double" double,
+    -- "_duration" duration,
+    "_float" float,
+    "_inet" inet,
+    "_int" int,
+    "_smallint" smallint,
+    "_text" text,
+    "_time" time,
+    "_timestamp" timestamp,
+    "_timeuuid" timeuuid,
+    "_tinyint" tinyint,
+    "_uuid" uuid,
+    "_varchar" varchar,
+    "_varint" varint,
+    "_nullableint" int
 );

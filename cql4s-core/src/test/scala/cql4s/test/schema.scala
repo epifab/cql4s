@@ -52,5 +52,30 @@ object schema:
   object dummy extends Table[
     "test",
     "dummy",
-    "id" :=: uuid  // funny table with a single field
+    (
+      "id" :=: uuid,
+      "_ascii" :=: nullable[ascii],
+      "_bigint" :=: nullable[bigint],
+      "_blob" :=: nullable[blob],
+      "_boolean" :=: nullable[boolean],
+      // cannot mix counter and non-counter column ¯\_(ツ)_/¯
+      // "_counter" :=: counter,
+      "_date" :=: nullable[date],
+      "_decimal" :=: nullable[decimal],
+      "_double" :=: nullable[double],
+      // duration is not supported
+      // "_duration" :=: nullable[duration],
+      "_float" :=: nullable[float],
+      "_inet" :=: nullable[inet],
+      "_int" :=: nullable[int],
+      "_smallint" :=: nullable[smallint],
+      "_text" :=: nullable[text],
+      "_time" :=: nullable[time],
+      "_timestamp" :=: nullable[timestamp],
+      "_timeuuid" :=: nullable[timeuuid],
+      "_tinyint" :=: nullable[tinyint],
+      "_uuid" :=: nullable[uuid],
+      "_varchar" :=: nullable[varchar],
+      "_varint" :=: nullable[varint]
+    )
   ]
