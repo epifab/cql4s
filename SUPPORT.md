@@ -76,8 +76,8 @@
 ### [Aggregate functions](https://cassandra.apache.org/doc/4.0/cassandra/cql/functions.html#aggregate-functions)
 - count
 - sum (_not supported_)
-- max (_not supported_)
-- min (_not supported_)
+- max
+- min
 - avg (_not supported_)
 - [user defined aggregation](https://cassandra.apache.org/doc/4.0/cassandra/cql/functions.html#user-defined-aggregates-functions) (_not supported_)
 

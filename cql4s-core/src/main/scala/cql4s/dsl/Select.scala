@@ -1,7 +1,7 @@
 package cql4s.dsl
 
 import cql4s.compiler.QueryCompiler
-import cql4s.utils.{FindAll, NonEmptyListOfFields, OptionalInput}
+import cql4s.utils.{FindAll, NonEmptyListOfColumns, NonEmptyListOfFields, OptionalInput}
 
 class Select[Keyspace, TableName, TableColumns, Fields, Where <: LogicalExpr, GroupBy, OrderBy: OrderByClasue, Limit: [X] =>> OptionalInput[bigint, X], PerPartitionLimit: [X] =>> OptionalInput[bigint, X]](
   val table: Table[Keyspace, TableName, TableColumns],
@@ -26,7 +26,7 @@ class Select[Keyspace, TableName, TableColumns, Fields, Where <: LogicalExpr, Gr
   def andWhere[NewWhere <: LogicalExpr](f: Selectable[TableColumns] => NewWhere): Select[Keyspace, TableName, TableColumns, Fields, And[LogicalEpxrWrap[Where], LogicalEpxrWrap[NewWhere]], GroupBy, OrderBy, Limit, PerPartitionLimit] =
     Select(table, fields, <<(where) and <<(f(table)), groupBy, orderBy, limit, perPartitionLimit, allowFiltering)
 
-  def groupBy[NewGroupBy](f: Selectable[TableColumns] => NewGroupBy)(using NonEmptyListOfFields[NewGroupBy]): Select[Keyspace, TableName, TableColumns, Fields, Where, NewGroupBy, OrderBy, Limit, PerPartitionLimit] =
+  def groupBy[NewGroupBy](f: Selectable[TableColumns] => NewGroupBy)(using NonEmptyListOfColumns[NewGroupBy]): Select[Keyspace, TableName, TableColumns, Fields, Where, NewGroupBy, OrderBy, Limit, PerPartitionLimit] =
     Select(table, fields, where, f(table), orderBy, limit, perPartitionLimit, allowFiltering)
 
   def orderBy[NewOrderBy](f: Selectable[TableColumns] => NewOrderBy)(using OrderByClasue[NewOrderBy]): Select[Keyspace, TableName, TableColumns, Fields, Where, GroupBy, NewOrderBy, Limit, PerPartitionLimit] =
