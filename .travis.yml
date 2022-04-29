@@ -1,6 +1,6 @@
 language: scala
 jdk:
-  - openjdk11
+  - openjdk16
 scala:
   - 3.0.0
 services:
