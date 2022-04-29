@@ -52,9 +52,9 @@
 
 - `-`
 - `+`
-- `_`
+- `*`
 - `/`
-- `%` (_not supported_)
+- `%`
 
 ### [Datetime arithmetic](https://cassandra.apache.org/doc/latest/cassandra/cql/operators.html#datetime--arithmetic)
 

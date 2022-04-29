@@ -30,6 +30,8 @@ trait Field[T]:
   def -[U, G <: Field[U], V](that: G)(using IsNumerical[T], IsNumerical[U], ArithmeticType[T, U, V], DataType[V]): Sub[T, this.type, U, G, V] = Sub(this, that)
   def *[U, G <: Field[U], V](that: G)(using IsNumerical[T], IsNumerical[U], ArithmeticType[T, U, V], DataType[V]): Mul[T, this.type, U, G, V] = Mul(this, that)
   def /[U, G <: Field[U], V](that: G)(using IsNumerical[T], IsNumerical[U], ArithmeticType[T, U, V], DataType[V]): Div[T, this.type, U, G, V] = Div(this, that)
+  def %[U, G <: Field[U], V](that: G)(using IsNumerical[T], IsNumerical[U], ArithmeticType[T, U, V], DataType[V]): Mod[T, this.type, U, G, V] = Mod(this, that)
+//  def %[U, G <: Field[U], V](that: G)(using IsNumerical[T], IsNumerical[U], DataType[int]): Mod[T, this.type, U, G] = Mod(this, that)
 
   def asc: Asc[this.type] = Asc(this)
   def desc: Desc[this.type] = Desc(this)

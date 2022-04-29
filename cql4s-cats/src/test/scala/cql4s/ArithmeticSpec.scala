@@ -11,7 +11,7 @@ import org.scalatest.Assertion
 
 import java.util.UUID
 
-class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
+class ArithmeticSpec extends AnyFreeSpec with Matchers with CassandraAware:
 
   import DummyFixture.*
 
@@ -23,6 +23,15 @@ class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
   private val double42 = 42.toDouble[double]
   private val varint42 = BigInt(42)[varint]
   private val decimal42 = BigDecimal(42)[decimal]
+
+  private val tinyint41 = 41.toByte[tinyint]
+  private val smallint41 = 41.toShort[smallint]
+  private val int41 = 41[int]
+  private val bigint41 = 41L[bigint]
+  private val float41 = 41.toFloat[float]
+  private val double41 = 41.toDouble[double]
+  private val varint41 = BigInt(41)[varint]
+  private val decimal41 = BigDecimal(41)[decimal]
 
   def testArithmetic[A](query: Query[UUID, A], result: A): Assertion =
     (for {
@@ -397,4 +406,94 @@ class ArithemticSpec extends AnyFreeSpec with Matchers with CassandraAware:
     "(a * b) + c" in testArithmetic(select.take(_ => <<(int42 * int42) + int42).compile, 1806)
     "a * (b + c)" in testArithmetic(select.take(_ => int42 * <<(int42 + int42)).compile, 3528)
     "a * ((b + c) / d)" in testArithmetic(select.take { _ => int42 * <<(<<(int42 + int42) / int42) }.compile, 84)
+  }
+
+  "Mod" - {
+    "tinyint % " - {
+      "tinyint"  in testArithmetic(select.take(_ => tinyint42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => tinyint42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => tinyint42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => tinyint42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => tinyint42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => tinyint42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => tinyint42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => tinyint42 % decimal41).compile, 1)
+    }
+
+    "smallint % " - {
+      "tinyint"  in testArithmetic(select.take(_ => smallint42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => smallint42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => smallint42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => smallint42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => smallint42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => smallint42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => smallint42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => smallint42 % decimal41).compile, 1)
+    }
+
+    "int % " - {
+      "tinyint"  in testArithmetic(select.take(_ => int42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => int42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => int42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => int42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => int42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => int42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => int42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => int42 % decimal41).compile, 1)
+    }
+
+    "bigint % " - {
+      "tinyint"  in testArithmetic(select.take(_ => bigint42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => bigint42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => bigint42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => bigint42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => bigint42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => bigint42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => bigint42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => bigint42 % decimal41).compile, 1)
+    }
+
+    "float % " - {
+      "tinyint"  in testArithmetic(select.take(_ => float42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => float42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => float42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => float42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => float42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => float42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => float42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => float42 % decimal41).compile, 1)
+    }
+
+    "double % " - {
+      "tinyint"  in testArithmetic(select.take(_ => double42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => double42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => double42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => double42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => double42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => double42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => double42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => double42 % decimal41).compile, 1)
+    }
+
+    "varint % " - {
+      "tinyint"  in testArithmetic(select.take(_ => varint42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => varint42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => varint42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => varint42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => varint42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => varint42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => varint42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => varint42 % decimal41).compile, 1)
+    }
+
+    "decimal % " - {
+      "tinyint"  in testArithmetic(select.take(_ => decimal42 % tinyint41).compile, 1)
+      "smallint" in testArithmetic(select.take(_ => decimal42 % smallint41).compile, 1)
+      "int"      in testArithmetic(select.take(_ => decimal42 % int41).compile, 1)
+      "bigint"   in testArithmetic(select.take(_ => decimal42 % bigint41).compile, 1)
+      "float"    in testArithmetic(select.take(_ => decimal42 % float41).compile, 1)
+      "double"   in testArithmetic(select.take(_ => decimal42 % double41).compile, 1)
+      "varint"   in testArithmetic(select.take(_ => decimal42 % varint41).compile, 1)
+      "decimal"  in testArithmetic(select.take(_ => decimal42 % decimal41).compile, 1)
+    }
   }
