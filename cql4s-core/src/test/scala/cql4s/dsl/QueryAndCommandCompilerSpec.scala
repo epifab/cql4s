@@ -12,7 +12,7 @@ import java.util.{Currency, UUID}
 
 class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
   "Insert CQL" in {
-    insertEvent.cql shouldBe "INSERT INTO music.events" +
+    insertEventIfNotExists.cql shouldBe "INSERT INTO music.events" +
       " (id, venue, start_time, artists, tickets, tags, metadata)" +
       " VALUES (?, ?, ?, ?, ?, ?, ?)" +
       " IF NOT EXISTS" +

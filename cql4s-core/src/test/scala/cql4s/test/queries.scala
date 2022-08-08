@@ -16,6 +16,13 @@ object queries:
     Insert
       .into(events)
       .usingTtl(15.seconds)
+      .compile
+      .pcontramap[Event]
+
+  val insertEventIfNotExists: Command[Event] =
+    Insert
+      .into(events)
+      .usingTtl(15.seconds)
       .ifNotExists
       .compile
       .pcontramap[Event]

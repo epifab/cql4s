@@ -9,7 +9,7 @@ import java.util.UUID
 
 
 class UDFSpec extends AnyFreeSpec with Matchers with CassandraAware:
-  "User defined functions can be called" in {
+  "User defined functions can be called" ignore {
     (for {
       given _ <- cassandra
 

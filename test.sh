@@ -2,6 +2,8 @@
 docker ps -a
 docker rm -f $(docker ps --all --quiet)
 
+rm -rf .data
+
 docker-compose build --no-cache
 docker-compose up -d
 

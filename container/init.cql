@@ -60,8 +60,8 @@ CREATE TABLE test.dummy (
     "_nullableint" int
 );
 
-CREATE FUNCTION test.plusone(arg int)
-    RETURNS NULL ON NULL INPUT
-    RETURNS int
-    LANGUAGE java
-    AS $$ return arg + 1; $$;
+-- CREATE FUNCTION test.plusone(arg int)
+--     RETURNS NULL ON NULL INPUT
+--     RETURNS int
+--     LANGUAGE java
+--     AS $$ return arg + 1; $$;
