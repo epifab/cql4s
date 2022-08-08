@@ -85,7 +85,7 @@
 ## [Data manipulation](https://cassandra.apache.org/doc/latest/cassandra/cql/dml.html)
 
 - Select
-- Insert (_missing support for `IF NOT EXISTS`_)
+- Insert
 - Update (_missing support for `IF EXISTS`_)
 - Delete (_missing support for `IF EXISTS`_)
 - Truncate

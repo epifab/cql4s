@@ -17,6 +17,9 @@ object CommandFragment:
       case (None, None) => None
       case (a, b) => Some("USING " + (a.map("TTL " + _.toSeconds).toList ++ b.map(ts => "TIMESTAMP " + (ts.toEpochMilli * 1000))).mkString(" AND "))
 
+  def ifNotExists(cond: Boolean): Option[String] =
+    Option.when(cond)("IF NOT EXISTS")
+
   given insert[Keyspace, TableName, TableColumns, KeyValues, A <: Tuple, B <: Tuple](
     using
     fields: NonEmptyListFragment[KeyFragment, KeyValues, A],
@@ -26,6 +29,7 @@ object CommandFragment:
       CompiledFragment(s"INSERT INTO ${command.table.keyspace.escaped}.${command.table.name.escaped}") ++
         fields.build(command.keyValues, ", ").wrap("(", ")") ++
         values.build(command.keyValues, ", ").wrap("VALUES (", ")") ++
+        ifNotExists(command.ifNotExistsCond) ++
         updateParameters(command.updateParameters)
     }
 

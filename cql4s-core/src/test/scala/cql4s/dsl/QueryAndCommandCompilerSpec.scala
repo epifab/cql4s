@@ -15,6 +15,7 @@ class QueryAndCommandCompilerSpec extends AnyFreeSpec with Matchers:
     insertEvent.cql shouldBe "INSERT INTO music.events" +
       " (id, venue, start_time, artists, tickets, tags, metadata)" +
       " VALUES (?, ?, ?, ?, ?, ?, ?)" +
+      " IF NOT EXISTS" +
       " USING TTL 15"
   }
 

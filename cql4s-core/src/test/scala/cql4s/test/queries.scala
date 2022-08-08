@@ -16,6 +16,7 @@ object queries:
     Insert
       .into(events)
       .usingTtl(15.seconds)
+      .ifNotExists
       .compile
       .pcontramap[Event]
 
