@@ -79,3 +79,5 @@ object schema:
       "_varint" :=: nullable[varint]
     )
   ]
+
+  object plusone extends udf["test", "plusone", int, int]

@@ -1,21 +1,21 @@
 package cql4s.dsl
 
 import com.datastax.oss.driver.api.core.ProtocolVersion
-import com.datastax.oss.driver.api.core.`type`.{TupleType, UserDefinedType, DataType as DriverDataType, DataTypes as DriverDataTypes}
 import com.datastax.oss.driver.api.core.`type`.codec.{TypeCodec as DriverTypeCodec, TypeCodecs as DriverTypeCodecs}
 import com.datastax.oss.driver.api.core.`type`.reflect.GenericType
+import com.datastax.oss.driver.api.core.`type`.{TupleType, UserDefinedType, DataType as DriverDataType, DataTypes as DriverDataTypes}
 import com.datastax.oss.driver.api.core.data.{CqlDuration, TupleValue, UdtValue}
 import com.datastax.oss.driver.internal.core.`type`.{DefaultTupleType, PrimitiveType, UserDefinedTypeBuilder}
 import com.datastax.oss.driver.internal.core.data.DefaultTupleValue
-import cql4s.utils.{ColumnsFactory, NonEmptyListOfColumns, TupleCodecs, TupleDecoder, TupleEncoder}
+import cql4s.utils.*
 
 import java.net.InetAddress
 import java.nio.ByteBuffer
 import java.time.*
 import java.util.UUID
-import scala.collection.JavaConverters.*
 import scala.concurrent.duration.Duration
 import scala.deriving.Mirror
+import scala.jdk.CollectionConverters.*
 
 
 trait DataType[-T]:
@@ -83,6 +83,32 @@ object udt:
   abstract class raw[Keyspace: DbIdentifier, Name: DbIdentifier, Components: ColumnsFactory]
 
 type nullable[T]
+
+
+trait UdfInputAdapter[InputSpec, RawInput, RefinedInput]:
+  def apply(raw: RawInput): RefinedInput
+
+object UdfInputAdapter:
+  given oneParam[A: DataType, F <: Field[A]]: UdfInputAdapter[A, F, F *: EmptyTuple] with
+    def apply(raw: F): F *: EmptyTuple = raw *: EmptyTuple
+
+  given tuple1[A: DataType, F <: Field[A]]: UdfInputAdapter[A *: EmptyTuple, F *: EmptyTuple, F *: EmptyTuple] with
+    def apply(raw: F *: EmptyTuple): F *: EmptyTuple = raw
+
+  given tupleN[A: DataType, SpecTail <: NonEmptyTuple, RawTail <: Tuple, RefinedTail <: Tuple, F <: Field[A]] (using base: UdfInputAdapter[SpecTail, RawTail, RefinedTail]): UdfInputAdapter[A *: SpecTail, F *: RawTail, F *: RefinedTail] with
+    def apply(raw: F *: RawTail): F *: RefinedTail = raw.head *: base(raw.tail)
+
+
+abstract class udf[Keyspace, Name, I, O](
+  using
+  dt: DataType[O],
+  keyspace: DbIdentifier[Keyspace],
+  name: DbIdentifier[Name]
+):
+  def apply[Raw, Refined <: Tuple](input: Raw)(using adapter: UdfInputAdapter[I, Raw, Refined]): DbFunction[Refined, O] = new DbFunction[Refined, O]:
+    override val dbName: String = s"${keyspace.escaped}.{${name.escaped}"
+    override val params: Refined = adapter(input)
+    given dataType: DataType[O] = dt
 
 
 type DataTypeCodec[T, J, S] = DataType[T] {

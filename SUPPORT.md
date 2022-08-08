@@ -46,7 +46,7 @@
 - [token](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#token) (_not supported_)
 - [uuid](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#uuid) (_not supported_)
 - [asBlob](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#blob-conversion-functions) (_not supported_)
-- [user defined functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#user-defined-scalar-functions) (_not supported_)
+- [user defined functions](https://cassandra.apache.org/doc/latest/cassandra/cql/functions.html#user-defined-scalar-functions)
 
 ### [Arithmetic operators](https://cassandra.apache.org/doc/latest/cassandra/cql/operators.html)
 

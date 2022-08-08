@@ -59,3 +59,9 @@ CREATE TABLE test.dummy (
     "_varint" varint,
     "_nullableint" int
 );
+
+CREATE FUNCTION test.plusone(arg int)
+    RETURNS NULL ON NULL INPUT
+    RETURNS int
+    LANGUAGE java
+    AS $$ return arg + 1; $$;
