@@ -1,6 +1,6 @@
 # CQL4s
 
-[![Build Status](https://app.travis-ci.com/epifab/cql4s.svg?branch=main)](https://app.travis-ci.com/epifab/cql4s)
+[![Build and test](https://github.com/epifab/cql4s/actions/workflows/main.yml/badge.svg)](https://github.com/epifab/cql4s/actions/workflows/main.yml)
 
 CQL4s is a typesafe CQL DSL and Cassandra client for *Scala 3*.
 
